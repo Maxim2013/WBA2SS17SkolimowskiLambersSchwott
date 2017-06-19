@@ -1,0 +1,15 @@
+var express = require('express');  //Express importieren
+
+var app = express();  //express wird hier an diesem Programm gebunden
+
+const settings = {
+	port: 8000
+};
+
+app.listen(settings.port, function() {
+	console.log("Der Dienstgeber ist nun auf Port "+settings.port+" verfügbar. ");
+});
+
+app.get('/', function (reg, res) {
+	res.send('GET Request Hello World');
+});
