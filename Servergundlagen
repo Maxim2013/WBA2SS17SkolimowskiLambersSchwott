@@ -2,7 +2,7 @@ var express = require('express');  //Express importieren
 
 var app = express();  //express wird hier an diesem Programm gebunden
 
-const settings = {
+const settings = {    // Port wird hier deklariert
 	port: 8000
 };
 
