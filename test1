@@ -1,0 +1,130 @@
+var express = require('express');  //Express importieren
+var bodyParser = require('body-parser');
+var redis = require('redis');
+var http = require('http');
+
+
+//Starten der Redis Datenbank
+var client = redis.createClient();
+
+var app = express();  //express wird hier an diesem Programm gebunden
+var jsonParser = bodyParser.json();
+
+/*const settings = {
+	port: 7000,
+	//datafile: "./admins.json"
+};
+*/
+
+// Hier wird der Port aufgerufen
+/* app.listen(settings.port, function() {
+	console.log("Der Dienstgeber ist nun auf Port "+settings.port+" verfügbar. ");
+}); */
+
+
+//ROUTING
+
+//binden des Pfades an eine Konstante
+const admins = require('./admins');
+
+//express sagen er soll diese Route an die App binden
+app.use(bodyParser.json());
+
+
+// GET Request auf Pfad "/"
+app.get("/admins", function AlleAdminsAusgeben (reg, res) {
+	client.keys('admins:*', function(err, rep) {
+		var users = [];
+
+		if(rep == 0) {
+			console.log("Keine Administratoren vorhanden");
+			return;
+		}
+
+		users = users.map(function(admins) {
+			return { Name: admins.name, Studiengang: admins.studiengang, Semester: admins.semester, Funktion: admins.funktion };
+		});
+	});
+});
+
+// POST Request auf Pfad "/"
+app.post("/admins", jsonParser, function (req, res) {
+	var newAdmin = req.body;
+	client.incr('id:admins', function(err, rep) {
+		newAdmin.id = rep;
+		client.set('admins:' + newAdmin.id, JSON.stringfy(newAdmin), function(err, rep) {
+			res.json(newAdmin);
+		});
+	});
+});
+
+// PUT Request auf Pfad "/users"
+app.put("/admins/:id", jsonParser, function AdminsInfoBearbeiten (req, res) {
+	client.del('admins:' +req.params.id, function(err, rep) {
+
+		if (rep == 1) {
+			var updateAdm = req.body;
+			updateAdm.id = req.params.id;
+			client.set('admins:' +req.params.id, JSON.stringfy(updateAdm), function(err, rep) {
+				res.json(updateAdm);
+			});
+		}
+		else {
+				res.status(404).type('text').send('Dieser Administrator wurde nicht gefunden');
+		}
+	});
+	
+});
+
+app.get('/admins/:id', function adminAusgeben(req, res) {
+	client.get('admins:' + req.params.id, function(err, rep) {
+		if(rep) {
+			res.type('json').send(rep);
+		}
+		else {
+			res.status(404).type('text').send("Der Administrator mit der ID" + req.params.id + "ist nicht in der Datenbank");
+		}
+	});
+});
+
+// DELETE Request auf Pfad "/users"
+app.delete('/admins/:id', function (req, res) {
+	client.del('admins:' +req.params.id, function(err, rep) {
+		if(rep == 1){
+			res.status(200). type('text').send('OK' + req.params.id + 'gelöscht');
+		}
+		else{
+			res.status(404).type('text').send('Der Administrator mit der ID' + req.params.id + 'wurde nicht gefunden');
+		}
+	});
+});
+
+
+
+/*
+
+//möglicher Fehlermeldung
+app.use(function(err, req, res, next) {
+	console.error(err.stack);
+	res.end(err.status + ' ' + err.messages);
+
+});
+
+
+// log mit Pfad und Zeitangabe für jeden Request-Pfad
+app.use(function ( req, res, next) {
+	console.log('Time: %d ' + ' Request-Pfad: ' + req.path, Date.now());
+	next();
+}); 
+
+
+// Starten des WS und binden an Port 8000
+app.listen(settings.port, function() {
+	console.log("Express App läuft auf Port" +setting.port);
+});
+
+
+*/
+
+app.listen(7000);
+console.log('Listening on http://localhost:7000');
