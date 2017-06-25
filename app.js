@@ -1,10 +1,13 @@
 var express = require('express');  //Express importieren
+var bodyParser = require('body-parser');
+
 
 var app = express();  //express wird hier an diesem Programm gebunden
+var jsonParser = bodyParser.json();
 
 const settings = {
 	port: 8000,
-	datafile: "./users.json"
+	
 };
 
 // Hier wird der Port aufgerufen
@@ -24,7 +27,7 @@ app.use("/users", users)
 
 // GET Request auf Pfad "/"
 app.get("/", function (reg, res) {
-	res.send('GET Request Hallo World');
+	res.send('Server läuft');
 });
 
 // POST Request auf Pfad "/"
