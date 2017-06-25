@@ -1,0 +1,52 @@
+var http = require('http');
+var faye = require('faye');
+
+var server = http.createServer();
+
+var bayeux = new faye.NodeAdapter({
+    mount: '/faye',
+});
+
+bayeux.attach(server);
+
+var client = new faye.Client('http://localhost:7000/faye');
+
+var subscription = client.subscription('/news', function(massage){
+    console.log("Neue Nachricht von" + massage.autor + ": " +message.content);
+});
+
+// Post
+app.post('/news', function(req, res){
+
+    //Nachricht an Topic 'news'publishen
+    var publication = client.publish('/news',{
+        "author": req.body.author,
+        "content": req.body.content,
+
+    });
+
+    publication.then(
+            //Promise-Handler wenn Publishen erfolgreich
+            function () {
+                console.log("Nachricht wurde gesendet.");
+                res.writeHead(200, "OK");
+                res.write("Nachricht wurde gesendet.");
+                res.ent();
+            },
+
+            //Promise-Handler wenn Publischen fehlgeschlagen ist
+            function (error) {
+                console.log("Nachricht nicht verschickt.");
+                res.write("Nachricht nicht verschickt.");
+                next(error)
+            }
+        );
+});
+
+
+
+
+
+server.listen(7000, function () {
+    console.log("Server läuft on Port 7000.");
+    });
