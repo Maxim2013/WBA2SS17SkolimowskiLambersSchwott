@@ -18,7 +18,7 @@ var app = express();
 // App benutzt JSON-Parser
 app.use(bodyParser.json());
 
-// Ressource: Kameras
+// Ressource: Ausleihobjekt
 
 app.get("/admins", function AlleAdministratorenAusgeben(req, res){
     client.keys('admins:*', function(err, rep){
@@ -34,7 +34,7 @@ app.get("/admins", function AlleAdministratorenAusgeben(req, res){
                admins.push(JSON.parse(val));
            });
 
-            admins = admins.map(function(kameras){
+            admins = admins.map(function(ausleihobjekt){
         
                 return {ID: admins.id, Name: admins.name, Studiengang: admins.studiengang, Semester: admins.semester, Funktion: admins.funktion}; //Ein String
             });
