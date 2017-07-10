@@ -1,0 +1,48 @@
+<!-- views/pages/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <% include ../partials/head %>
+</head>
+
+<body class="container">
+
+    <header>
+        <% include ../partials/header %>
+    </header>
+
+    <main>
+        <div class="panel panel-default main-panel ">
+            <h1>Login</h1>
+            <div class="alert alert-danger hidden errorMessage">
+                <strong>Fehler!</strong> Ihre Anmeldedaten waren nicht korrekt!
+            </div>
+            <div class="form-group">
+                <label for="email">Email address:</label>
+                <input type="email" class="form-control" id="email">
+            </div>
+            <div class="form-group">
+                <label for="pwd">Password:</label>
+                <input type="password" class="form-control" id="pwd">
+            </div>
+            <div class="buttonbar">
+                <button type="button" class="btn btn-success" id="btn-login">Login</button>
+                <a href="/register" class="btn btn-default">Registrieren</a>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <% include ../partials/footer %>
+    </footer>
+    <script>
+        $(document).ready(function () {
+            $("#btn-login").on("click", requestLogin);
+        });
+    </script>
+</body>
+
+</html>
