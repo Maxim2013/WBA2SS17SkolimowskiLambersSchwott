@@ -6,6 +6,9 @@
 		"titel":	"titel1",
 		"autor":	"autor1",
 		"isbn":		"1",
+		"ausleihstatus": "0"
+		
+
 	},
 
 	{
@@ -13,12 +16,14 @@
 		"titel":	"titel2",
 		"autor":	"autor2",
 		"isbn":		"2",
+		"ausleihstatus": "0", 
 	},
 
 	{	"art": 		"cd",
 		"titel":	"titel1",
 		"autor":	"autor1",
 		"isbn":		"1",
+		"ausleihstatus": "0",
 	},
 
 	]
