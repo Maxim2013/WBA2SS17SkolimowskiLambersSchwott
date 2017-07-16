@@ -11,7 +11,7 @@ var app = express();  //express wird hier an diesem Programm gebunden
 var jsonParser = bodyParser.json();
 
 const settings = {
-	port: 8000,
+	port: 6379,
 	
 };
 
