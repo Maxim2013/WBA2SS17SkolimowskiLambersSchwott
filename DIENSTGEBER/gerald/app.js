@@ -7,15 +7,15 @@ var jsonParser = bodyParser.json();
 var app = express();
 
 var USERLIST = 'USERLIST';
-var VIDEOLIST = 'VIDEOLIST';
+var AUSLEIHOBJEKTELIST = 'AUSLEIHOBJEKTELIST';
 
-var VIDEO_INDEX = 'VIDEO_INDEX';
+var AUSLEIHOBJEKTELIST_INDEX = 'AUSLEIHOBJEKTLIST_INDEX';
 var USER_INDEX = 'USER_INDEX';
 
 var VALUE_OK = 'OK';
 
 function cleanDb() {
-    db.del([VIDEOLIST, USERLIST], function (err, reply) {
+    db.del([AUSLEIHOBJEKTELIST, USERLIST], function (err, reply) {
         console.log("DB Clean! " + reply);
     });
 }
@@ -49,31 +49,34 @@ function errorInDatabase(res, err) {
     }
 }
 
-function isValidVideo(video) {
-    if (video === undefined) {
+function isValidAusleihobjekte(ausleihobjekte) {
+    if (ausleihobjekte === undefined) {
         return false;
     }
-    if (video.title === undefined) {
+        if (ausleihobjekte.id === undefined) {
         return false;
     }
-    if (video.youtubeId === undefined) {
+      if (ausleihobjekte.art === undefined) {
         return false;
     }
-    if (video.description === undefined) {
+    if (ausleihobjekte.title === undefined) {
         return false;
     }
-    if (video.tags === undefined) {
+    if (ausleihobjekte.autor=== undefined) {
         return false;
     }
-    if (video.uploader === undefined) {
+    if (ausleihobjekte.isbn === undefined) {
+        return false;
+    }
+    if (ausleihobjekte.ausleihstatus === undefined) {
         return false;
     }
     return true;
 }
 
-function getVideoById(videoList, id) {
+function getAusleihobjeketById(ausleihobjekteList, id) {
     var result;
-    videoList.forEach(function (entry) {
+    ausleihobjektList.forEach(function (entry) {
         _json = JSON.parse(entry);
         if (parseInt(_json.id) == id) {
             result = _json;
@@ -89,7 +92,7 @@ function isValidUser(user) {
     if (user.username === undefined) {
         return false;
     }
-    if (user.email === undefined) {
+    if (user.id === undefined) {
         return false;
     }
     if (user.password === undefined) {
@@ -149,13 +152,13 @@ app.use('/', function (req, res, next) {
 //Festlegen aller Routen
 
 //**********************************************************************
-//			Laden aller vorhandenen Videos
+//			Laden aller vorhandenen Ausleihobjekte
 //**********************************************************************
-app.get('/videos/', function (req, res) {
+app.get('/res/ausleihobjekte', function (req, res) {
     //Sollen die Liste eingegrenz werden?
     var _searchTerm = req.query.searchterm;
     //Laden aller Videos
-    db.lrange(VIDEOLIST, 0, -1, function (err, reply) {
+    db.lrange(AUSLEIHOBJEKTELIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
             if (reply === null || reply == undefined) {
                 handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Video List')
@@ -163,13 +166,13 @@ app.get('/videos/', function (req, res) {
                 var _result = [];
                 reply.forEach(function (element) {
                     //Überprüfen ob das Ergebniss den Suchparametern entspricht
-                    var _video = JSON.parse(element)
+                    var _ausleihobjekte = JSON.parse(element)
                     if (_searchTerm == undefined) {
                         _result.push(_video);
                     } else {
                         //Überprüfen ob der Suchbegriff enthalten ist:
-                        var termInTags = arrayContainsTerm(_video.tags, _searchTerm);
-                        var termInDescription = stringContainsTerm(_video.description, _searchTerm);
+                        var termInTags = arrayContainsTerm(_ausleihobjekete.tags, _searchTerm);
+                        var termInDescription = stringContainsTerm(_ausleihobjekte.description, _searchTerm);
                         if (termInDescription || termInTags) {
                             _result.push(JSON.parse(element));
                         }
@@ -184,27 +187,27 @@ app.get('/videos/', function (req, res) {
 });
 
 //**********************************************************************
-//			Anlegen eines neuen Videos
+//			Anlegen eines neuen Ausleihobjektes
 //**********************************************************************
-app.post('/videos', jsonParser, function (req, res) {
-    //Abfragen wieviele Viedos aktuell in der Liste sind um eine ID zu generieren
-    db.get(VIDEO_INDEX, function (err, reply) {
+app.post('/res/ausleihobjekte', jsonParser, function (req, res) {
+    //Abfragen wieviele Ausleihobjekte aktuell in der Liste sind um eine ID zu generieren
+    db.get(AUSLEIHOBJEKTE_INDEX, function (err, reply) {
         var _id = parseInt(reply);
-        //Es wird per JSON ein komplettes videoobjekt gesendet -> kann direkt aus dem body entnommenwerden
-        var newVideo = req.body;
+        //Es wird per JSON ein komplettes ausleihobjekt gesendet -> kann direkt aus dem body entnommenwerden
+        var newAusleihobjekte = req.body;
         //Überprüfen ob passende parameter gesendet wurden
-        if (!isValidVideo(newVideo)) {
+        if (!isValidVideo(newAusleihobjekte)) {
             handleInternalError(req, res, 'INTERNAL SERVER ERROR - Error in given Videodata')
         } else {
             //Objekt vervollständigen und in die DB speichern
-            newVideo.id = _id;
-            db.rpush(VIDEOLIST, JSON.stringify(newVideo), function (err, reply) {
+            newAusleihobjekte.id = _id;
+            db.rpush(AUSLEIHOBJEKTELIST, JSON.stringify(newAusleihobjekte), function (err, reply) {
                 if (!errorInDatabase(res, err)) {
                     if (reply !== _id) {
                         //TODO INCREMENT ID
-                        db.incr(VIDEO_INDEX, function (err, reply) {
+                        db.incr(AUSLEIHOBJEKTE_INDEX, function (err, reply) {
                             if (!errorInDatabase(res, err)) {
-                                res.status(201).json(newVideo);
+                                res.status(201).json(newAusleihobjekte);
                             } else {
                                 handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot increment VIDEO_INDEX')
                             }
@@ -217,87 +220,48 @@ app.post('/videos', jsonParser, function (req, res) {
 });
 
 
-//**********************************************************************
-//			Laden der Informationen zum Video mit der angegebenen Videoid
-//**********************************************************************
-app.get('/videos/:videoId', function (req, res) {
-    var _videoId = parseInt(req.params.videoId);
-    //Laden aller Videos
-    db.lrange(VIDEOLIST, 0, -1, function (err, reply) {
+//******************************************************************************
+//			Laden der Informationen der Ausleihobjekte mit der angegebenen Isbn
+//******************************************************************************
+app.get('/res/ausleihobjekte/:id', function (req, res) {
+    var _ausleihobjekteId = parseInt(req.params.ausleihobjekteId);
+    //Laden aller ausleihobjekte
+    db.lrange(AUSLEIHOBJEKTELIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
-            var _video = getVideoById(reply, _videoId);
-            //entfernen der Kommentardaten aus dem video Objekt!
-            delete _video.comments;
-            if (_video === null) {
+            var _ausleihobjekte = getAusleihobjekteById(reply, _ausleihobjekteId);
+            
+            if (_ausleihobjekte === null) {
                 res.status(404).send("RESOURCE NOT FOUND");
             } else {
                 res.status(200).json(_video);
             }
         } else {
-            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Video with id ' + _videoId);
+            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Ausleihobjekt with id ' + _ausleihobjekteId);
         }
     });
 
 });
 
 
-//**********************************************************************
-//			Aktualisieren der änderbaren Informationen eines Videos mit der übergebenen ID
-//**********************************************************************
-app.patch('/videos/:videoId', function (req, res) {
-    var _videoId = parseInt(req.params.videoId);
-    var _videoData = req.body;
-    db.lrange(VIDEOLIST, 0, -1, function (err, reply) {
-        if (!errorInDatabase(res, err)) {
-            var _video = getVideoById(reply, _videoId);
-            var _videoDataToDelet = JSON.parse(JSON.stringify(_video));
-            if (_video === null) {
-                res.status(404).send("RESOURCE NOT FOUND");
-            } else {
-                //Update whatever is possible
-                if (_videoData.title !== undefined && _videoData.title !== '') {
-                    _video.title = _videoData.title;
-                }
-                if (_videoData.description !== undefined && _videoData.description !== '') {
-                    _video.description = _videoData.description;
-                }
-                if (_videoData.tags !== undefined && _videoData.tags !== '') {
-                    _video.tags = _videoData.tags;
-                }
-                //Update Database
-                db.lrem(VIDEOLIST, 0, JSON.stringify(_videoDataToDelet), function (err, reply) {
-                    if (reply === 1) {
-                        db.rpush(VIDEOLIST, JSON.stringify(_video), function (err, reply) {
-                            res.status(200).json(_video)
-                        });
-                    } else {
-                        handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot update video with ID ' + _videoId);
-                    }
-                });
-
-            }
-        }
-    });
-});
 
 //**********************************************************************
-//			Löschen des Videos mit der angegebenen ID
+//			Löschen des Ausleihobjektes mit der angegebenen id
 //**********************************************************************
-app.delete('/videos/:videoId', function (req, res) {
-    var _videoId = parseInt(req.params.videoId);
+app.delete('/res/ausleihobjekte/:id', function (req, res) {
+    var _id = parseInt(req.params.id);
     //Laden aller Videos
     db.lrange(VIDEOLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
-            var _video = getVideoById(reply, _videoId);
-            if (_video === null || _video == undefined) {
+            var _ausleihobjekte = getausleihobjekteById(reply, _videoId);
+            if (_ausleihobjekte === null || _ausleihobjekte == undefined) {
                 res.status(404).send("RESOURCE NOT FOUND");
             } else {
                 //Löschen des gefundenen Videos
-                db.lrem(VIDEOLIST, 0, JSON.stringify(_video), function (err, reply) {
+                db.lrem(AUSLEIHOBJEKTELIST, 0, JSON.stringify(_ausleihobjekte), function (err, reply) {
                     if (reply === 1) {
                         res.status(200).send(VALUE_OK);
                     } else {
-                        handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot delete video with id ' + _videoId);
+                        handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot delete ausleihobjekte with id ' + _ausleihobjekteId);
                     }
                 });
             }
@@ -305,87 +269,14 @@ app.delete('/videos/:videoId', function (req, res) {
     });
 });
 
-//**********************************************************************
-//			Laden aller Kommentare zu einem Video mit der angegebenen ID
-//**********************************************************************
-app.get('/videos/:videoId/comments', function (req, res) {
-    var _videoId = parseInt(req.params.videoId);
-    //Laden aller Videos
-    db.lrange(USERLIST, 0, -1, function (usrErr, usrReply) {
-        var _userList = usrReply;
-        if (!errorInDatabase(res, usrErr)) {
-            db.lrange(VIDEOLIST, 0, -1, function (err, reply) {
-                if (!errorInDatabase(res, err)) {
-                    var _video = getVideoById(reply, _videoId);
-                    if (_video === null && _video != undefined) {
-                        res.status(404).send("RESOURCE NOT FOUND");
-                    } else {
-                        //Match comments with usernames
-                        var _result = [];
-                        _video.comments.forEach(function (e, index) {
-                            var _element = e;
-                            var _user = getUserById(_userList, _element.userId)
-                            if (_user == undefined) {
-                                _element.uploaderName = 'UNBEKANNTER NUTZER';
-                            } else {
-                                _element.uploaderName = _user.username;
-                            }
-                            _result.push(_element);
-                        });
-                        res.status(200).json(_result);
-                    }
-                } else {
-                    handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot loading commentdata for video with id ' + _videoId);
-                }
-            });
-        } else {
-            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Userlist');
-        }
-    });
-
-});
-
-//**********************************************************************
-//			Hinzufügen eines Kommentars zum Video mit der angegebenen ID
-//**********************************************************************
-app.post('/videos/:videoId/comments', jsonParser, function (req, res) {
-    var _videoId = parseInt(req.params.videoId);
-    var _commentData = req.body;
-    //Abfragen der aktuellen Videodaten
-    db.lrange(VIDEOLIST, 0, -1, function (err, reply) {
-        if (!errorInDatabase(res, err)) {
-            var _video = getVideoById(reply, _videoId);
-            if (_video === null) {
-                res.status(404).send("RESOURCE NOT FOUND");
-            } else {
-                db.lrem(VIDEOLIST, 0, JSON.stringify(_video), function (err, reply) {
-                    if (!errorInDatabase(res, err)) {
-                        _video.comments.push(_commentData);
-                        db.rpush(VIDEOLIST, JSON.stringify(_video), function (err, reply) {
-                            if (!errorInDatabase(res, err)) {
-                                res.status(200).send(VALUE_OK);
-                            } else {
-                                handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot create updated Videodata');
-                            }
-                        });
-                    } else {
-                        handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot remove video with id ' + _videoId);
-                    }
-                });
-            }
-        } else {
-            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Video List');
-        }
-    });
-});
 
 
 //**********************************************************************
 //			Abfragen aller vorhandenen Tags
 //**********************************************************************
-app.get('/tags/', function (req, res) {
+app.get('/res/tags/', function (req, res) {
     //Laden aller Tags
-    db.lrange(VIDEOLIST, 0, -1, function (err, reply) {
+    db.lrange(AUSLEIHOBJEKTELIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
             if (reply === null || reply == undefined) {
                 res.status(500).send("INTERNAL SERVER ERROR - Cannot load Tag List");
@@ -394,9 +285,9 @@ app.get('/tags/', function (req, res) {
                 //Iterriere über alle Videos
                 reply.forEach(function (video) {
 
-                    _video = JSON.parse(video);
+                    _ausleihobjekte = JSON.parse(ausleihobjekte);
                     //Iterriere über alle Tags im video
-                    _video.tags.forEach(function (tag) {
+                    _ausleihobjekte.tags.forEach(function (tag) {
                         var _tagValue = _result[tag];
                         if (_tagValue == undefined) {
                             _result[tag] = 1;
@@ -482,7 +373,7 @@ app.get('/users/:userId', function (req, res) {
 //**********************************************************************
 //			Updaten der änderbaren Daten eines Nutzers
 //**********************************************************************
-app.patch('/users/:userId', jsonParser, function (req, res) {
+app.patch('/users/:id', jsonParser, function (req, res) {
     var _userId = parseInt(req.params.userId);
     var _userData = req.body;
     //Laden aller Videos
@@ -497,8 +388,8 @@ app.patch('/users/:userId', jsonParser, function (req, res) {
                 if (_userData.username !== undefined && _userData.username !== '') {
                     _user.username = _userData.username;
                 }
-                if (_userData.email !== undefined && _userData.email !== '') {
-                    _user.email = _userData.email;
+                if (_userData.id !== undefined && _userData.id !== '') {
+                    _user.id = _userData.id;
                 }
                 if (_userData.password !== undefined && _userData.password !== '') {
                     _user.password = _userData.password;
@@ -527,7 +418,7 @@ app.patch('/users/:userId', jsonParser, function (req, res) {
 //**********************************************************************
 //			löschen eines Benutzers
 //**********************************************************************
-app.delete('/users/:userId', function (req, res) {
+app.delete('/users/:id', function (req, res) {
     var _userId = parseInt(req.params.userId);
     //Laden aller Videos
     db.lrange(USERLIST, 0, -1, function (err, reply) {
@@ -547,119 +438,4 @@ app.delete('/users/:userId', function (req, res) {
             }
         }
     });
-});
-
-
-
-//**********************************************************************
-//			Laden aller Videos eines Nutzers
-//**********************************************************************
-app.get('/users/:userId/videos', function (req, res) {
-    var _userId = parseInt(req.params.userId);
-    //Laden aller Videos
-    db.lrange(VIDEOLIST, 0, -1, function (err, reply) {
-        if (!errorInDatabase(res, err)) {
-            var _result = [];
-            if (reply === null || reply == undefined) {
-                res.status(404).send("RESOURCE NOT FOUND");
-            } else {
-                var result = [];
-                reply.forEach(function (pElement) {
-                    var _video = JSON.parse(pElement);
-                    if (_video.uploader === _userId) {
-                        result.push(_video);
-                    }
-                });
-                res.status(200).json(result);
-            }
-        }
-    });
-
-});
-
-
-//**********************************************************************
-//			Helper only // Stellt einen Defaultdatensatz in der DB her
-//**********************************************************************
-app.get('/resetDb', function (req, res) {
-    console.log('Setting up initial Data');
-    db.del([VIDEOLIST, USERLIST, VIDEO_INDEX, USER_INDEX], function (err, reply) {
-        console.log("DB Clean! " + reply);
-        var video0 = {
-            "id": 0
-            , "title": "NodeJs Tutorial"
-            , "youtubeId": "pU9Q6oiQNd0"
-            , "description": "What exactly is node.js? Is it a command-line tool, a language, the same thing as Ruby on Rails, a cure for cancer?"
-            , "tags": ["NodeJS", "Beginner", "Tutorial", "Basics"]
-            , "comments": [{
-                "userId": 0
-                , "text": "Tolle erklärung"
-                , "timestamp": 1466605397896
-            }, {
-                "userId": 0
-                , "text": "Finde ich nicht so gut"
-                , "timestamp": 1466605397896
-            }]
-            , "uploaded": 1466602203753
-            , "uploader": 0
-        };
-        var video1 = {
-            "id": 1
-            , "title": "Another NodeJs Tutorial"
-            , "youtubeId": "X3C2peMLW34"
-            , "description": "If you're new to web development, it can be a bit confusing as to what exactly node.js is and to what you should do with it, and there's a lot of information out there...most of which seems to be tailored towards genius-level developers."
-            , "tags": ["NodeJS", "Tutorial", "Advanced"]
-            , "comments": [{
-                "userId": 0
-                , "text": "Das andere Video hat mir besser gefallen!"
-                , "timestamp": 1466605397896
-            }, {
-                "userId": 1
-                , "text": "Glaube ich nicht"
-                , "timestamp": 1466605397896
-            }, {
-                "userId": 0
-                , "text": "Doch, ganz sicher!"
-                , "timestamp": 1466605397896
-            }]
-            , "uploaded": 1466602903753
-            , "uploader": 0
-        };
-        var paramsVideo = [VIDEOLIST, JSON.stringify(video0), JSON.stringify(video1)];
-        db.rpush(paramsVideo, function (err, reply) {
-            console.log("Added Videos! Reply: " + reply);
-        });
-        var user0 = {
-            "id": 0
-            , "username": "Franz"
-            , "email": "user1@localhost.de"
-            , "password": "user1"
-        };
-        
-        var user1 = {
-            "id": 1
-            , "username": "Torsten"
-            , "email": "user2@localhost.de"
-            , "password": "user2"
-        };
-        db.lpush(USERLIST, JSON.stringify(user0), function (err, reply) {
-            console.log("Added User! Reply: " + reply);
-        });
-        
-        db.lpush(USERLIST, JSON.stringify(user1), function (err, reply) {
-            console.log("Added User! Reply: " + reply);
-        });
-        
-        db.set(VIDEO_INDEX, 2, function (err, reply) {
-            console.log("Set VIDEO_INDEX to 2");
-        });
-        db.set(USER_INDEX, 2, function (err, reply) {
-            console.log("Set USER_INDEX to 2");
-        });
-        res.status(200).send('DB CLEANED');
-    });
-});
-
-app.listen(1337, function () {
-    console.log('Example app listening on port 1337!');
 });
