@@ -1,0 +1,32 @@
+{
+	"admins": [
+
+	{
+		"id":			"00001",
+		"name": 		"Mark Schwott",
+		"studiengang": 	"Medieninformatik",
+		"semester": 	"6",
+		"funktion": 	"Administrator"
+
+	},
+
+	{
+		"id":			"00002",
+		"name": 		"Laura Skolimowski",
+		"studiengang": 	"Medieninformatik",
+		"semester": 	"6",
+		"funktion": 	"Administrator"
+	},
+
+	{
+		"id":			"00003",
+		"name": 		"Gerald G. Lambers",
+		"studiengang": 	"Medieninformatik",
+		"semester": 	"8",
+		"funktion": 	"Administrator"
+	}
+
+
+
+	 ]
+}
