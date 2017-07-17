@@ -20,7 +20,7 @@ function cleanDb() {
     });
 }
 
-//HELPER FUNCTIONS
+//Fehlermeldungen
 
 function stringContainsTerm(string, term) {
     if (string.indexOf(term) === -1) {
@@ -50,15 +50,13 @@ function errorInDatabase(res, err) {
 }
 
 function isValidObjekt(objekt) {
-  /*  if (objekt === undefined) {
+	if (objekt === undefined) {
         return false;
     }
     if (objekt.title === undefined) {
         return false;
     }
-    if (objekt.youtubeId === undefined) {
-        return false;
-    }
+
     if (objekt.description === undefined) {
         return false;
     }
@@ -67,7 +65,7 @@ function isValidObjekt(objekt) {
     }
     if (objekt.uploader === undefined) {
         return false;
-    } */
+    } 
 	
     return true;
 }
@@ -84,7 +82,7 @@ function getObjektById(OBJEKTLIST, id) {
 }
 
 function isValidUser(user) {
-  /*  if (user === undefined) {
+ /*  if (user === undefined) {
         return false;
     }
     if (user.username === undefined) {
@@ -151,6 +149,7 @@ app.use('/', function (req, res, next) {
 
 //**********************************************************************
 //			Laden aller vorhandenen Objekts
+// GETESTET mit Defaultdaten ... Funktioniert  17/17/2017  g
 //**********************************************************************
 app.get('/objekts/', function (req, res) {
     //Sollen die Liste eingegrenz werden?
@@ -159,7 +158,7 @@ app.get('/objekts/', function (req, res) {
     db.lrange(OBJEKTLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
             if (reply === null || reply == undefined) {
-                handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Video List')
+                handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Objekt List')
             } else {
                 var _result = [];
                 reply.forEach(function (element) {
@@ -185,28 +184,28 @@ app.get('/objekts/', function (req, res) {
 });
 
 //**********************************************************************
-//			Anlegen eines neuen Objekts
+//			Anlegen eines neuen Objekts  
 //**********************************************************************
 app.post('/objekts', jsonParser, function (req, res) {
-    //Abfragen wieviele Viedos aktuell in der Liste sind um eine ID zu generieren
+    //Abfragen wieviele Objekts aktuell in der Liste sind um eine ID zu generieren
     db.get(OBJEKT_INDEX, function (err, reply) {
         var _id = parseInt(reply);
         //Es wird per JSON ein komplettes objektobjekt gesendet -> kann direkt aus dem body entnommenwerden
-        var newVideo = req.body;
+        var newObjekt = req.body;
         //Überprüfen ob passende parameter gesendet wurden
-        if (!isValidObjekt(newVideo)) {
-            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Error in given Videodata')
+        if (!isValidObjekt(newObjekt)) {
+            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Error in given Objektdata')
         } else {
             //Objekt vervollständigen und in die DB speichern
-            newVideo.id = _id;
-            db.rpush(OBJEKTLIST, JSON.stringify(newVideo), function (err, reply) {
+            newObjekt.id = _id;
+            db.rpush(OBJEKTLIST, JSON.stringify(newObjekt), function (err, reply) {
                 if (!errorInDatabase(res, err)) {
                     if (reply !== _id) {
                         //TODO INCREMENT ID
                         db.incr(OBJEKT_INDEX, function (err, reply) {
                             if (!errorInDatabase(res, err)) {
-                                res.status(201).json(newVideo);
-                            } else {
+                                res.status(201).json(newObjekt);
+                                  } else {
                                 handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot increment OBJEKT_INDEX')
                             }
                         });
@@ -219,7 +218,8 @@ app.post('/objekts', jsonParser, function (req, res) {
 
 
 //**********************************************************************
-//			Laden der Informationen zum Video mit der angegebenen Videoid
+//			Laden der Informationen (ohne Kommentare) zum Leihobjekt mit der angegebenen Objektid
+//		GETESTET mit Defaultdaten ... Funktioniert  17/17/2017  g
 //**********************************************************************
 app.get('/objekts/:objektId', function (req, res) {
     var _objektId = parseInt(req.params.objektId);
@@ -235,7 +235,7 @@ app.get('/objekts/:objektId', function (req, res) {
                 res.status(200).json(_objekt);
             }
         } else {
-            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Video with id ' + _objektId);
+            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Objekt with id ' + _objektId);
         }
     });
 
@@ -243,7 +243,8 @@ app.get('/objekts/:objektId', function (req, res) {
 
 
 //**********************************************************************
-//			Aktualisieren der änderbaren Informationen eines Objekts mit der übergebenen ID
+//			Aktualisieren der änderbaren Informationen eines Objekts mit der übergebenen ID 
+//			GETESTET mit Defaultdaten ... Funktioniert  17/17/2017  g
 //**********************************************************************
 app.patch('/objekts/:objektId', function (req, res) {
     var _objektId = parseInt(req.params.objektId);
@@ -282,7 +283,8 @@ app.patch('/objekts/:objektId', function (req, res) {
 });
 
 //**********************************************************************
-//			Löschen des Objekts mit der angegebenen ID
+//			Löschen des Objekts mit der angegebenen ID  getestet 17.7.17 gl
+//GETESTET mit Defaultdaten ... Funktioniert  17/17/2017  g
 //**********************************************************************
 app.delete('/objekts/:objektId', function (req, res) {
     var _objektId = parseInt(req.params.objektId);
@@ -307,7 +309,8 @@ app.delete('/objekts/:objektId', function (req, res) {
 });
 
 //**********************************************************************
-//			Laden aller Kommentare zu einem Video mit der angegebenen ID
+//			Laden aller Kommentare zu einem Objekt mit der angegebenen ID 
+//GETESTET mit Defaultdaten ... Funktioniert  17/17/2017  g
 //**********************************************************************
 app.get('/objekts/:objektId/comments', function (req, res) {
     var _objektId = parseInt(req.params.objektId);
@@ -347,12 +350,12 @@ app.get('/objekts/:objektId/comments', function (req, res) {
 });
 
 //**********************************************************************
-//			Hinzufügen eines Kommentars zum Video mit der angegebenen ID
+//			Hinzufügen eines Kommentars zum Objekt mit der angegebenen ID
 //**********************************************************************
 app.post('/objekts/:objektId/comments', jsonParser, function (req, res) {
     var _objektId = parseInt(req.params.objektId);
     var _commentData = req.body;
-    //Abfragen der aktuellen Videodaten
+    //Abfragen der aktuellen Objektdaten
     db.lrange(OBJEKTLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
             var _objekt = getObjektById(reply, _objektId);
@@ -366,7 +369,7 @@ app.post('/objekts/:objektId/comments', jsonParser, function (req, res) {
                             if (!errorInDatabase(res, err)) {
                                 res.status(200).send(VALUE_OK);
                             } else {
-                                handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot create updated Videodata');
+                                handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot create updated Objektdata');
                             }
                         });
                     } else {
@@ -375,14 +378,15 @@ app.post('/objekts/:objektId/comments', jsonParser, function (req, res) {
                 });
             }
         } else {
-            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Video List');
+            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Objekt List');
         }
     });
 });
 
 
 //**********************************************************************
-//			Abfragen aller vorhandenen Tags
+//			Abfragen aller vorhandenen Tags --- 
+//GETESTET mit Defaultdaten ... Funktioniert  17/17/2017  g
 //**********************************************************************
 app.get('/tags/', function (req, res) {
     //Laden aller Tags
@@ -418,7 +422,7 @@ app.get('/tags/', function (req, res) {
 
 ////USER CRUD
 //**********************************************************************
-//			Anlegen eines neunen Users
+//			Anlegen eines neunen Users 
 //**********************************************************************
 app.post('/users', jsonParser, function (req, res) {
     db.get(USER_INDEX, function (err, reply) {
@@ -428,6 +432,7 @@ app.post('/users', jsonParser, function (req, res) {
             res.status(400).send("Das Userobjekt war Fehlerhaft");
         } else {
             newUser.id = _id;
+            newUser.username = _username;
             db.rpush(USERLIST, JSON.stringify(newUser), function (err, reply) {
                 if (!errorInDatabase(res, err)) {
                     db.incr(USER_INDEX, function (err, reply) {
@@ -442,7 +447,8 @@ app.post('/users', jsonParser, function (req, res) {
 });
 
 //**********************************************************************
-//			Laden aller User
+//			Laden aller User ---
+//GETESTET mit Defaultdaten ... Funktioniert  17/17/2017  g
 //**********************************************************************
 app.get('/users', function (req, res) {
     //Laden aller Objekts
@@ -462,7 +468,8 @@ app.get('/users', function (req, res) {
 });
 
 //**********************************************************************
-//			Laden des Nutzers mit der übergebenen ID
+//			Laden des Nutzers mit der übergebenen ID --- 
+//GETESTET mit Defaultdaten ... Funktioniert  17/17/2017  g
 //**********************************************************************
 app.get('/users/:userId', function (req, res) {
     var _userId = parseInt(req.params.userId);
@@ -481,7 +488,8 @@ app.get('/users/:userId', function (req, res) {
 
 
 //**********************************************************************
-//			Updaten der änderbaren Daten eines Nutzers
+//			Updaten der änderbaren Daten eines Nutzers ---
+//GETESTET mit Defaultdaten ... Funktioniert  17/17/2017  g
 //**********************************************************************
 app.patch('/users/:userId', jsonParser, function (req, res) {
     var _userId = parseInt(req.params.userId);
@@ -526,7 +534,8 @@ app.patch('/users/:userId', jsonParser, function (req, res) {
 
 
 //**********************************************************************
-//			löschen eines Benutzers
+//			löschen eines Benutzers --- 
+//GETESTET mit Defaultdaten ... Funktioniert  17/17/2017  g
 //**********************************************************************
 app.delete('/users/:userId', function (req, res) {
     var _userId = parseInt(req.params.userId);
@@ -553,7 +562,8 @@ app.delete('/users/:userId', function (req, res) {
 
 
 //**********************************************************************
-//			Laden aller Objekts eines Nutzers
+//			Laden aller Objekts eines Nutzers --- 
+// GETESTET mit Defaultdaten ... Funktioniert  17/17/2017  gl
 //**********************************************************************
 app.get('/users/:userId/objekts', function (req, res) {
     var _userId = parseInt(req.params.userId);
@@ -580,7 +590,7 @@ app.get('/users/:userId/objekts', function (req, res) {
 
 
 //**********************************************************************
-//			Helper only // Stellt einen Defaultdatensatz in der DB her
+//		 Stellt einen Defaultdatensatz in der DB her, und füllt ihn.
 //**********************************************************************
 app.get('/resetDb', function (req, res) {
     console.log('Setting up initial Data');
@@ -588,60 +598,58 @@ app.get('/resetDb', function (req, res) {
         console.log("DB Clean! " + reply);
         var objekt0 = {
             "id": 0
-            , "title": "NodeJs Tutorial"
-            , "youtubeId": "pU9Q6oiQNd0"
-            , "description": "What exactly is node.js? Is it a command-line tool, a language, the same thing as Ruby on Rails, a cure for cancer?"
-            , "tags": ["NodeJS", "Beginner", "Tutorial", "Basics"]
+            , "title": "World of Warcraft INSTALLATIONSCD1"
+            , "description": "World of Warcraft is a massively multiplayer online role-playing game released in 2004 by Blizzard Entertainment."
+            , "tags": ["WOW", "Horde", "Allianz", "Arthas"]
             , "comments": [{
                 "userId": 0
-                , "text": "Tolle erklärung"
-                , "timestamp": 1466605397896
+                , "text": "Tolles Spiel"
+                , "timestamp": 1500298801
             }, {
-                "userId": 0
+                "userId": 1
                 , "text": "Finde ich nicht so gut"
-                , "timestamp": 1466605397896
+                , "timestamp": 1500298801
             }]
-            , "uploaded": 1466602203753
+            , "uploaded": 1500298801
             , "uploader": 0
         };
         var objekt1 = {
             "id": 1
-            , "title": "Another NodeJs Tutorial"
-            , "youtubeId": "X3C2peMLW34"
-            , "description": "If you're new to web development, it can be a bit confusing as to what exactly node.js is and to what you should do with it, and there's a lot of information out there...most of which seems to be tailored towards genius-level developers."
-            , "tags": ["NodeJS", "Tutorial", "Advanced"]
+            , "title": "Das Beispielbuch"
+            , "description": "Ein Autor bietet zum Beispiel ein Buch als Druck- und als Download-Format an.."
+            , "tags": ["Buch", "Autor", "Papier"]
             , "comments": [{
                 "userId": 0
-                , "text": "Das andere Video hat mir besser gefallen!"
-                , "timestamp": 1466605397896
+                , "text": "Das andere Buch hat mir besser gefallen!"
+                , "timestamp": 1500298801
             }, {
                 "userId": 1
                 , "text": "Glaube ich nicht"
-                , "timestamp": 1466605397896
+                , "timestamp": 1500298801
             }, {
                 "userId": 0
                 , "text": "Doch, ganz sicher!"
-                , "timestamp": 1466605397896
+                , "timestamp": 1500298801
             }]
-            , "uploaded": 1466602903753
-            , "uploader": 0
+            , "uploaded": 1500298801
+            , "uploader": 1
         };
-        var paramsVideo = [OBJEKTLIST, JSON.stringify(objekt0), JSON.stringify(objekt1)];
-        db.rpush(paramsVideo, function (err, reply) {
+        var paramsObjekt = [OBJEKTLIST, JSON.stringify(objekt0), JSON.stringify(objekt1)];
+        db.rpush(paramsObjekt, function (err, reply) {
             console.log("Added Objekts! Reply: " + reply);
         });
         var user0 = {
             "id": 0
-            , "username": "Franz"
-            , "email": "user1@localhost.de"
-            , "password": "user1"
+            , "username": "Mark"
+            , "email": "Mark@localhost.de"
+            , "password": "mark1"
         };
         
         var user1 = {
             "id": 1
-            , "username": "Torsten"
-            , "email": "user2@localhost.de"
-            , "password": "user2"
+            , "username": "Gerald"
+            , "email": "Gerald@localhost.de"
+            , "password": "gerald1"
         };
         db.lpush(USERLIST, JSON.stringify(user0), function (err, reply) {
             console.log("Added User! Reply: " + reply);
@@ -657,10 +665,10 @@ app.get('/resetDb', function (req, res) {
         db.set(USER_INDEX, 2, function (err, reply) {
             console.log("Set USER_INDEX to 2");
         });
-        res.status(200).send('DB CLEANED');
+        res.status(200).send('DB CLEANED AND FILLED');
     });
 });
 
 app.listen(1337, function () {
-    console.log('Example app listening on port 1337!');
+    console.log('Dienstgeber läuft auf port 1337! ---  Erstelle Defaultdaten in der DB mit > get resetDb < !! ');
 });

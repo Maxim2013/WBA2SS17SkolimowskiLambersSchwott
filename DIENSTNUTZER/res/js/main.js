@@ -80,10 +80,10 @@ function registerUser() {
 }
 
 function loadCommentData() {
-    var _videoId = $('#videoId').val();
+    var _objektId = $('#objektId').val();
     $.ajax({
         type: "GET"
-        , url: '/video/' + _videoId + '/comments'
+        , url: '/objekt/' + _objektIdId + '/comments'
         , cache: false
         , complete: function (data) {
             $('#comment-container').html(data.responseText);
@@ -95,7 +95,8 @@ function loadCommentData() {
 function addComment() {
     var _data = {};
     _data.text = $('#new-comment-text').val();
-    _data.videoId = $('#videoId').val();
+    _data.videoId = $('#objektId').val();
+    _data.videoId = $('#objektId').val();
     $.ajax({
         type: "POST"
         , url: '/new/comment'
@@ -134,25 +135,5 @@ function updateUser() {
     });
 }
 
-function initTagFieldsOnPage() {
-    $('.video-tags').tagsinput({
-        maxTags: 10
-        , maxChars: 15
-    });
-}
 
-
-function loadTagCloud() {
-    $("#tag-cloud").awesomeCloud({
-        "size": {
-            "grid": 9
-            , "factor": 1
-        }
-        , "options": {
-            "color": "random-dark"
-            , "rotationRatio": 0.35
-        }
-        , "font": "'Helvetica Neue',Helvetica,Arial,sans-serif"
-        , "shape": "circle"
-    });
 }

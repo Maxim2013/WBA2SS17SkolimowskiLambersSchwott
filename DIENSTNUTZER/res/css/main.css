@@ -1,5 +1,5 @@
 body {
-    background-color: #767cf5;
+   background-color: #767cf5;
     background-image: url(../img/bg.jpg);
     background-repeat: repeat;
 }
@@ -44,11 +44,11 @@ main {
     bottom: 0;
 }
 
-.video-container {
+.objekt-container {
     margin-top: 22px;
 }
 
-.video-description {
+.objekt-description {
     height: 200px;
     overflow-y: auto;
 }
@@ -66,7 +66,7 @@ main {
     width: 100%;
 }
 
-.latest-video {
+.latest-objekt {
     min-height: 250px;
 }
 

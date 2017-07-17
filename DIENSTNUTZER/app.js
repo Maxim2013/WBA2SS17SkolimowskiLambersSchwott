@@ -14,6 +14,10 @@ var HTTP_CREATED = 201;
 var HTTP_NOT_FOUND = 404;
 var HTTP_INTERNAL_ERROR = 500;
 
+
+
+//Key 79ZQP4VR   für ISBNDB.com API  
+
 //*****************HELPER FUNCTIONS**************************//
 
 
@@ -139,15 +143,15 @@ app.get('/', function (req, res) {
 app.get('/dashboard', function (req, res) {
     console.log('Showing Dashboard');
     var _data = buildBasicDataSet(req, true);
-    //videoliste laden,
-    request.get(DIENSTGEBER_BASE_URL + '/videos/', function (error, response, body) {
+    //objektliste laden,
+    request.get(DIENSTGEBER_BASE_URL + '/objekts/', function (error, response, body) {
         if (!error && response.statusCode == HTTP_SUCCESSFULL) {
-            var _videoList = JSON.parse(body);
-            //videoliste sortieren
-            _videoList.sort(function (a, b) {
+            var _objektList = JSON.parse(body);
+            //objektliste sortieren
+            _objektList.sort(function (a, b) {
                 return b.uploaded - a.uploaded;
             });
-            _data.videoList = _videoList;
+            _data.objektList = _objektList;
             //Laden der Tagcloud
             request.get(DIENSTGEBER_BASE_URL + '/tags/', function (error, response, body) {
                 if (!error && response.statusCode == HTTP_SUCCESSFULL) {
@@ -158,6 +162,7 @@ app.get('/dashboard', function (req, res) {
                 }
             });
         } else {
+        	
             handleInternalError(req, res);
         }
     });
@@ -173,7 +178,7 @@ app.get('/search', function (req, res) {
     console.log('Showing Searchpage');
     var data = buildBasicDataSet(req, true);
     data.searchTerm = ""
-    data.videoList = [];
+    data.objektList = [];
     res.render('pages/search', data);
 });
 
@@ -189,20 +194,20 @@ app.get('/search/:term', function (req, res) {
     if (_searchTerm != undefined) {
         _queryString = '?searchterm=' + _searchTerm;
     }
-    request.get(DIENSTGEBER_BASE_URL + '/videos' +
+    request.get(DIENSTGEBER_BASE_URL + '/objekts' +
         _queryString
         , function (error, response, body) {
             if (!error && response.statusCode == HTTP_SUCCESSFULL) {
                 var result = [];
-                var _videoList = JSON.parse(body);
-                _videoList.forEach(function (video, index) {
-                    var termInTags = arrayContainsTerm(video.tags, _searchTerm);
-                    var termInDescription = stringContainsTerm(video.description, _searchTerm);
+                var _objektList = JSON.parse(body);
+                _objektList.forEach(function (objekt, index) {
+                    var termInTags = arrayContainsTerm(objekt.tags, _searchTerm);
+                    var termInDescription = stringContainsTerm(objekt.description, _searchTerm);
                     if (termInTags || termInDescription) {
-                        result.push(video);
+                        result.push(objekt);
                     }
                 });
-                data.videoList = result;
+                data.objektList = result;
                 data.searchTerm = _searchTerm;
                 res.render('pages/search', data);
             } else {
@@ -212,18 +217,18 @@ app.get('/search/:term', function (req, res) {
 });
 
 //*************************************************************************************
-//          Laden der Detailseite eines Videos
+//          Laden der Detailseite eines Objekts
 //*************************************************************************************
-app.get('/video/:id', function (req, res) {
-    console.log('Showing Videopage');
-    var _videoId = parseInt(req.params.id);
-    request.get(DIENSTGEBER_BASE_URL + '/videos/' + _videoId, function (error, response, body) {
+app.get('/objekt/:id', function (req, res) {
+    console.log('Showing Objektpage');
+    var _objektId = parseInt(req.params.id);
+    request.get(DIENSTGEBER_BASE_URL + '/objekts/' + _objektId, function (error, response, body) {
         if (!error && response.statusCode == HTTP_SUCCESSFULL) {
-            var _video = JSON.parse(body);
+            var _objekt = JSON.parse(body);
             var data = buildBasicDataSet(req, true);
-            data.video = _video;
+            data.objekt = _objekt;
             data.currentUserId = req.session.userid;
-            res.render('pages/video', data);
+            res.render('pages/objekt', data);
         } else {
             handleInternalError(req, res);
         }
@@ -232,23 +237,23 @@ app.get('/video/:id', function (req, res) {
 
 
 //*************************************************************************************
-//          Seite zur Bearbeitung eines Videos Laden
+//          Seite zur Bearbeitung eines Objekts Laden
 //*************************************************************************************
-app.get('/video/:id/edit', function (req, res) {
-    console.log('Showing Videoeditpage');
-    var _videoId = parseInt(req.params.id);
-    request.get(DIENSTGEBER_BASE_URL + '/videos/' + _videoId, function (error, response, body) {
+app.get('/objekt/:id/edit', function (req, res) {
+    console.log('Showing Objekteditpage');
+    var _objektId = parseInt(req.params.id);
+    request.get(DIENSTGEBER_BASE_URL + '/objekts/' + _objektId, function (error, response, body) {
         if (!error && response.statusCode == HTTP_SUCCESSFULL) {
-            var _video = JSON.parse(body);
-            if (_video.uploader === req.session.userid) {
+            var _objekt = JSON.parse(body);
+            if (_objekt.uploader === req.session.userid) {
                 var data = buildBasicDataSet(req, true);
-                data.video = _video;
+                data.objekt = _objekt;
                 data.currentUserId = req.session.userid;
                 data.isEdit = true;
-                res.render('pages/videoNew', data);
+                res.render('pages/objektNew', data);
             } else {
-                //Wenn es nicht der Uploader des video ist ist die bearbeitung nicht verfügbar
-                res.redirect('/video/' + _videoId);
+                //Wenn es nicht der Uploader des objekt ist ist die bearbeitung nicht verfügbar
+                res.redirect('/objekt/' + _objektId);
             }
 
         } else {
@@ -258,21 +263,21 @@ app.get('/video/:id/edit', function (req, res) {
 });
 
 //*************************************************************************************
-//          Bearbeiten eines Videos durchführen
+//          Bearbeiten eines Objekts durchführen
 //*************************************************************************************
-app.patch('/video/:id/edit', function (req, res) {
-    console.log('Editing Video');
-    var _videoId = parseInt(req.params.id);
-    var _videoData = req.body;
+app.patch('/objekt/:id/edit', function (req, res) {
+    console.log('Editing Objekt');
+    var _objektId = parseInt(req.params.id);
+    var _objektData = req.body;
     request.patch(
-        DIENSTGEBER_BASE_URL + '/videos/' + _videoId, {
-            json: _videoData
+        DIENSTGEBER_BASE_URL + '/objekts/' + _objektId, {
+            json: _objektData
         , }
         , function (error, response, body) {
             if (!error && response.statusCode == HTTP_SUCCESSFULL) {
                 var result = {};
-                result.videoEdited = true;
-                result.redirect = '/video/' + _videoId;
+                result.objektEdited = true;
+                result.redirect = '/objekt/' + _objektId;
                 res.status(HTTP_SUCCESSFULL).json(result);
             } else {
                 handleInternalError(req, res);
@@ -281,12 +286,12 @@ app.patch('/video/:id/edit', function (req, res) {
 });
 
 //*************************************************************************************
-//          Laden der Kommentare zu einem Video
+//          Laden der Kommentare zu einem Objekt
 //*************************************************************************************
-app.get('/video/:id/comments', function (req, res) {
+app.get('/objekt/:id/comments', function (req, res) {
     console.log('Showing Dashboard');
-    var _videoId = parseInt(req.params.id);
-    request.get(DIENSTGEBER_BASE_URL + '/videos/' + _videoId + '/comments', function (error, response, body) {
+    var _objektId = parseInt(req.params.id);
+    request.get(DIENSTGEBER_BASE_URL + '/objekts/' + _objektId + '/comments', function (error, response, body) {
         if (!error && response.statusCode == HTTP_SUCCESSFULL) {
             var _data = {};
             _data.commentData = JSON.parse(body);
@@ -299,12 +304,12 @@ app.get('/video/:id/comments', function (req, res) {
 
 
 //*************************************************************************************
-//          Löschen eines videos
+//          Löschen eines objekts
 //*************************************************************************************
-app.get('/video/:id/delete', function (req, res) {
-    console.log('Deleting Video');
-    var _videoId = parseInt(req.params.id);
-    request.delete(DIENSTGEBER_BASE_URL + '/videos/' + _videoId, function (error, response, body) {
+app.get('/objekt/:id/delete', function (req, res) {
+    console.log('Deleting Objekt');
+    var _objektId = parseInt(req.params.id);
+    request.delete(DIENSTGEBER_BASE_URL + '/objekts/' + _objektId, function (error, response, body) {
         if (!error && response.statusCode == HTTP_SUCCESSFULL) {
             res.redirect('/dashboard');
         } else {
@@ -314,41 +319,49 @@ app.get('/video/:id/delete', function (req, res) {
 });
 
 //*************************************************************************************
-//          Laden der Seite zum anlegen eines neuen Videos
+//          Laden der Seite zum anlegen eines neuen Objekts
 //*************************************************************************************
-app.get('/new/video', function (req, res) {
-    console.log('Showing New Video Page');
+app.get('/new/objekt', function (req, res) {
+    console.log('Showing New Objekt Page');
     var data = buildBasicDataSet(req, true);
-    data.video = {};
+    data.objekt = {};
     data.currentUserId = req.session.userid;
     data.isEdit = false;
-    res.render('pages/videoNew', data);
+    res.render('pages/objektNew', data);
 })
 
 //*************************************************************************************
-//          Anlegen eines neuen Videos
+//          Anlegen eines neuen Objekts
 //*************************************************************************************
-app.post('/new/video', function (req, res) {
-    console.log('Adding new Video');
-    var _video = {};
-    _video.title = req.body.title;
-    _video.youtubeId = req.body.youtubeId;
-    _video.description = req.body.description;
-    _video.tags = req.body.tags;
-    _video.comments = [];
-    _video.uploader = req.session.userid;
-    _video.uploaded = Date.now();
+app.post('/new/objekt', function (req, res) {
+    console.log('Adding new Objekt');
+    var _objekt = {};
+    _objekt.title = req.body.title;   
+    _objekt.description = req.body.description;
+    _objekt.tags = req.body.tags;
+    _objekt.comments = [];
+    _objekt.uploader = req.session.userid;
+    _objekt.uploaded = Date.now();
     request.post(
-        DIENSTGEBER_BASE_URL + '/videos', {
-            json: _video
+        DIENSTGEBER_BASE_URL + '/objekts', {
+            json: _objekt
         , }
         , function (error, response, body) {
             if (!error && response.statusCode == HTTP_CREATED) {
-                var _videoData = body;
+                var _objektData = body;
                 var _result = {};
-                _result.videoAdded = true;
-                _result.redirect = '/video/' + _videoData.id;
+                _result.objektAdded = true;
+                _result.redirect = '/objekt/' + _objektData.id;
                 res.status(HTTP_CREATED).json(_result);
+                
+       //************************************************************************
+       //			BUCHSUCHE NACH NAMEN MIT http://isbndb.com api
+       //************************************************************************       
+
+      //          http://isbndb.com/api/v2/json/79ZQP4VR/book/... ;
+       //		
+                
+                
             } else {
                 handleInternalError(req, res);
             };
@@ -362,13 +375,14 @@ app.post('/new/comment', function (req, res) {
     console.log('Adding new Comment');
     var data = buildBasicDataSet(req, true);
     var _commentData = req.body;
-    var _videoId = _commentData.videoId;
-    delete _commentData.videoId;
+    var _objektId = _commentData.objektId;
+    delete _commentData.objektId;
+    
     //anreichern mit übrigen Daten
     _commentData.userId = req.session.userid;
     _commentData.timestamp = Date.now();
     request.post(
-        DIENSTGEBER_BASE_URL + '/videos/' + _videoId + '/comments', {
+        DIENSTGEBER_BASE_URL + '/objekts/' + _objektId + '/comments', {
             json: _commentData
         , }
         , function (error, response, body) {
@@ -392,11 +406,11 @@ app.get('/profile', function (req, res) {
             var _user = JSON.parse(body);
             var data = buildBasicDataSet(req, true);
             data.user = _user;
-            //Laden der Videos eines Nutzers
-            request.get(DIENSTGEBER_BASE_URL + '/users/' + _profileId + '/videos', function (error, response, body) {
+            //Laden der Objekts eines Nutzers
+            request.get(DIENSTGEBER_BASE_URL + '/users/' + _profileId + '/objekts', function (error, response, body) {
                 if (!error && response.statusCode == HTTP_SUCCESSFULL) {
-                    var _videoList = JSON.parse(body);
-                    data.videoList = _videoList;
+                    var _objektList = JSON.parse(body);
+                    data.objektList = _objektList;
                     res.render('pages/profile', data);
                 } else {
                     handleInternalError(req, res);
@@ -466,6 +480,7 @@ app.post('/login', function (req, res) {
                     user = element;
                 }
             });
+            
             //Kein Nutzer gefunden -> Login Invalid    
             if (user == undefined) {
                 res.status(HTTP_NOT_FOUND).json({
@@ -592,5 +607,5 @@ app.use(function (req, res, next) {
     res.type('txt').send('Not found');
 });
 
-app.listen(1338);
-console.log('Dienstnuter lauft auf port 1338');
+app.listen(1339);
+console.log('Dienstnutzer lauft auf port 1339');

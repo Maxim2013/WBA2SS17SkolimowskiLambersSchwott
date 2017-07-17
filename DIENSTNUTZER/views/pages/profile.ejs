@@ -19,7 +19,7 @@
             <section>
                 <h2>Userinfo:</h2>
                 <div class="image-container">
-                    <img class="img-circle" width="200" height="200" src="/img/user.gif" />
+                    <img class="img-circle" width="100" height="100" src="/img/userr-22-512.jpg" />
                 </div>
                 <div class="form-group">
                     <label for="email">Email-adresse:</label>
@@ -34,32 +34,32 @@
                 </div>
             </section>
             <section>
-                <h2>Videos:</h2>
-                <% for(var i=0; i<videoList.length; i++) {%>
-                    <article class="video">
+                <h2>objekts:</h2>
+                <% for(var i=0; i<objektList.length; i++) {%>
+                    <article class="objekt">
                         <div class="panel panel-default">
                             <div class="panel-heading">
-                                <%= videoList[i].title %>
+                                <%= objektList[i].title %>
                             </div>
                             <div class="panel-body container-fluid">
                                 <div class="row">
                                     <div class="col-sm-7">
-                                        <%= videoList[i].description %>
+                                        <%= objektList[i].description %>
                                     </div>
                                     <div class="col-sm-3">
-                                        <select multiple class="video-tags" disabled="disabled">
-                                            <% for(var j=0; j<videoList[i].tags.length; j++) {%>
-                                                <option value="<%= videoList[i].tags[j] %>">
-                                                    <%= videoList[i].tags[j] %>
+                                        <select multiple class="objekt-tags" disabled="disabled">
+                                            <% for(var j=0; j<objektList[i].tags.length; j++) {%>
+                                                <option value="<%= objektList[i].tags[j] %>">
+                                                    <%= objektList[i].tags[j] %>
                                                 </option>
                                                 <% } %>
                                         </select>
                                     </div>
                                     <div class="col-sm-2">
-                                        <button type="button" name="<%= videoList[i].id %>" class="btn btn-default btn-xs btn-profile-video-delete" href="/video/<%= videoList[i].id %>/delete">
+                                        <button type="button" name="<%= objektList[i].id %>" class="btn btn-default btn-xs btn-profile-objekt-delete" href="/objekt/<%= objektList[i].id %>/delete">
                                             <span class="glyphicon glyphicon-remove" aria-hidden="true"></span><span>Löschen</span>
                                         </button>
-                                        <button type="button" name="<%= videoList[i].id %>" class="btn btn-default btn-xs btn-profile-video-edit" href="/video/<%= videoList[i].id %>/edit">
+                                        <button type="button" name="<%= objektList[i].id %>" class="btn btn-default btn-xs btn-profile-objekt-edit" href="/objekt/<%= objektList[i].id %>/edit">
                                             <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span><span>Bearbeiten</span>
                                         </button>
                                     </div>
@@ -84,11 +84,11 @@
             initTagFieldsOnPage();
             $("#btn-save").on("click", updateUser);
 
-            $(".btn-profile-video-edit").on("click", function () {
+            $(".btn-profile-objekt-edit").on("click", function () {
                 window.location = $(this).attr('href');
             });
-            $(".btn-profile-video-delete").on("click", function () {
-                var _confirm = confirm('Wollen Sie dieses Video wirklich löschen?');
+            $(".btn-profile-objekt-delete").on("click", function () {
+                var _confirm = confirm('Wollen Sie dieses objekt wirklich löschen?');
                 if (_confirm) {
                     $.ajax({
                         type: "GET"

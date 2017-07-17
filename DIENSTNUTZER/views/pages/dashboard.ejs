@@ -17,18 +17,14 @@
         <div class="container-fluid panel panel-default dashboard-container">
             <div class="row">
                 <div class="col-sm-7">
-                    <h3>Neustes Video:</h3>
-                    <div class="panel panel-default video latest-video">
+                    <h3>Neustes Objekt für WBA2 hinzufügen</h2>
+                    <div class="panel panel-default objekt latest-objekt">
                         <div class="panel-heading">
-                            <a href="/video/<%= videoList[0].id%>">
-                                <%= videoList[0].title%>
+                            <a href="/objekt/<%= objektList[0].id%>">
+                                <%= objektList[0].title%>
                             </a>
+
                         </div>
-                        <div class="panel-body container-fluid">
-                            <iframe class="" id="youtubeIframe" width="560" height="315" src="https://www.youtube.com/embed/<%= videoList[0].youtubeId%>" frameborder="0" allowfullscreen></iframe>
-                        </div>
-                    </div>
-                </div>
                 <div class="col-sm-5">
                     <h3>Beliebte Tags:</h3>
                     <div id="tag-cloud">
@@ -40,22 +36,22 @@
             </div>
             <div class="row">
                 <div class="col-sm-12">
-                    <% for(var i=1; i<videoList.length; i++) {%>
-                        <div class="panel panel-default video">
+                    <% for(var i=1; i<objektList.length; i++) {%>
+                        <div class="panel panel-default objekt">
                             <div class="panel-heading">
-                                <a href="/video/<%= videoList[i].id%>">
-                                    <%= videoList[i].title%>
+                                <a href="/objekt/<%= objektList[i].id%>">
+                                    <%= objektList[i].title%>
                                 </a>
                             </div>
                             <div class="panel-body container-fluid">
                                 <div class="row">
                                     <div class="col-sm-9">
-                                        <%= videoList[i].description%>
+                                        <%= objektList[i].description%>
                                     </div>
                                     <div class="col-sm-3">
-                                        <select multiple class="video-tags" disabled="disabled">
-                                            <% for(var j=0; j<videoList[i].tags.length; j++) {%>
-                                                <option value="<%= videoList[i].tags[j] %>"><%= videoList[i].tags[j] %></option>
+                                        <select multiple class="objekt-tags" disabled="disabled">
+                                            <% for(var j=0; j<objektList[i].tags.length; j++) {%>
+                                                <option value="<%= objektList[i].tags[j] %>"><%= objektList[i].tags[j] %></option>
                                             <% } %>
                                         </select>
                                     </div>

@@ -1,13 +1,13 @@
 [
   {
     "id": 0,
-    "videoId": 0,
+    "BUchId": 0,
     "userId":0,
-    "text":"Das ist ein toller Kommentar zu einem unfassbaren Video"
+    "text":"Das ist ein toller Kommentar zu einem unfassbaren Buch"
   },
   {
     "id": 1,
-    "videoId": 0,
+    "BuchId": 0,
     "userId":0,
     "text":"Wow was für ein bullshit"
   }
