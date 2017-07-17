@@ -1,0 +1,14 @@
+[
+  {
+    "id": 0,
+    "objektId": 0,
+    "userId":0,
+    "text":"**Positiver Kommentar zum Ausleihobjekt**"
+  },
+  {
+    "id": 1,
+    "objektId": 0,
+    "userId":0,
+    "text":"**Negativer Kommentar zum Ausleihobjekt**"
+  }
+]
