@@ -86,7 +86,7 @@ function getAusleihobjeketById(ausleihobjekteList, id) {
 }
 
 function isValidUser(user) {
-    if (user === undefined) {
+   /* if (user === undefined) {
         return false;
     }
     if (user.username === undefined) {
@@ -97,7 +97,7 @@ function isValidUser(user) {
     }
     if (user.password === undefined) {
         return false;
-    }
+    }*/
     return true;
 }
 
@@ -157,7 +157,7 @@ app.use('/', function (req, res, next) {
 app.get('/res/ausleihobjekte', function (req, res) {
     //Sollen die Liste eingegrenz werden?
     var _searchTerm = req.query.searchterm;
-    //Laden aller Videos
+    //Laden aller objekte
     db.lrange(AUSLEIHOBJEKTELIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
             if (reply === null || reply == undefined) {
@@ -283,7 +283,7 @@ app.get('/res/tags/', function (req, res) {
             } else {
                 var _result = {};
                 //Iterriere über aller Ausleihobjekte
-                reply.forEach(function (video) {
+                reply.forEach(function (ausleihobjekte) {
 
                     _ausleihobjekte = JSON.parse(ausleihobjekte);
                     //Iterriere über alle Tags 
@@ -310,7 +310,7 @@ app.get('/res/tags/', function (req, res) {
 //**********************************************************************
 //			Anlegen eines neunen Users
 //**********************************************************************
-app.post('/users', jsonParser, function (req, res) {
+app.post('/res/users', jsonParser, function (req, res) {
     db.get(USER_INDEX, function (err, reply) {
         var _id = parseInt(reply);
         var newUser = req.body;
@@ -335,7 +335,7 @@ app.post('/users', jsonParser, function (req, res) {
 //			Laden aller User
 //**********************************************************************
 app.get('/res/users', function (req, res) {
-    //Laden aller Videos
+    //Laden aller User
     db.lrange(USERLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
             if (reply === null || reply == undefined) {
@@ -444,12 +444,98 @@ app.delete('/res/users/:id', function (req, res) {
 //			GOOGLE API test
 //**********************************************************************
 
-app.get("/igdb", function (req, res) {
-  unirest.get("https://igdbcom-internet-game-database-v1.p.mashape.com/games/120")
-  .header("X-Mashape-Key", "glf02WQpgRmshvNhjD5wRBsLir9Zp1h7ezVjsnMl2hOkIETLuI")
-  .header("Accept", "application/json")
-  .end(function (result) {
-    console.log(result.status, result.headers, result.body);
-    res.send(result.body);
-  });
+//app.get("/", function (req, res) {
+//  unirest.get("")
+//  .header(" "")
+//  .header("", "application/json")
+//  .end(function (result) {
+//    console.log(result.status, result.headers, result.body);
+//    res.send(result.body);
+//  });
+//});
+
+//**********************************************************************
+//			Helper only // Stellt einen Defaultdatensatz in der DB her
+//**********************************************************************
+app.get('/resetDb', function (req, res) {
+    console.log('Setting up initial Data');
+    db.del([VIDEOLIST, USERLIST, VIDEO_INDEX, USER_INDEX], function (err, reply) {
+        console.log("DB Clean! " + reply);
+        var video0 = {
+            "id": 0
+            , "title": "NodeJs Tutorial"
+            , "youtubeId": "pU9Q6oiQNd0"
+            , "description": "What exactly is node.js? Is it a command-line tool, a language, the same thing as Ruby on Rails, a cure for cancer?"
+            , "tags": ["NodeJS", "Beginner", "Tutorial", "Basics"]
+            , "comments": [{
+                "userId": 0
+                , "text": "Tolle erklärung"
+                , "timestamp": 1466605397896
+            }, {
+                "userId": 0
+                , "text": "Finde ich nicht so gut"
+                , "timestamp": 1466605397896
+            }]
+            , "uploaded": 1466602203753
+            , "uploader": 0
+        };
+        var video1 = {
+            "id": 1
+            , "title": "Another NodeJs Tutorial"
+            , "youtubeId": "X3C2peMLW34"
+            , "description": "If you're new to web development, it can be a bit confusing as to what exactly node.js is and to what you should do with it, and there's a lot of information out there...most of which seems to be tailored towards genius-level developers."
+            , "tags": ["NodeJS", "Tutorial", "Advanced"]
+            , "comments": [{
+                "userId": 0
+                , "text": "Das andere Video hat mir besser gefallen!"
+                , "timestamp": 1466605397896
+            }, {
+                "userId": 1
+                , "text": "Glaube ich nicht"
+                , "timestamp": 1466605397896
+            }, {
+                "userId": 0
+                , "text": "Doch, ganz sicher!"
+                , "timestamp": 1466605397896
+            }]
+            , "uploaded": 1466602903753
+            , "uploader": 0
+        };
+        var paramsVideo = [VIDEOLIST, JSON.stringify(video0), JSON.stringify(video1)];
+        db.rpush(paramsVideo, function (err, reply) {
+            console.log("Added Videos! Reply: " + reply);
+        });
+        var user0 = {
+            "id": 0
+            , "username": "Franz"
+            , "email": "user1@localhost.de"
+            , "password": "user1"
+        };
+        
+        var user1 = {
+            "id": 1
+            , "username": "Torsten"
+            , "email": "user2@localhost.de"
+            , "password": "user2"
+        };
+        db.lpush(USERLIST, JSON.stringify(user0), function (err, reply) {
+            console.log("Added User! Reply: " + reply);
+        });
+        
+        db.lpush(USERLIST, JSON.stringify(user1), function (err, reply) {
+            console.log("Added User! Reply: " + reply);
+        });
+        
+        db.set(VIDEO_INDEX, 2, function (err, reply) {
+            console.log("Set VIDEO_INDEX to 2");
+        });
+        db.set(USER_INDEX, 2, function (err, reply) {
+            console.log("Set USER_INDEX to 2");
+        });
+        res.status(200).send('DB CLEANED');
+    });
+});
+
+app.listen(1337, function () {
+    console.log('Example app listening on port 1337!');
 });
