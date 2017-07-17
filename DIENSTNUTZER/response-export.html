@@ -75,7 +75,27 @@
             </div>
         </div>
         </div>
-
+    
+    <section id="karte"></section>
+    
+    <script src="zepto.js"></script>
+    <script src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
+    
+    $(function(){
+    
+    navigator.geolocation.getCurrentPosition(function(position){
+    meineLongitude = position.coords.longitude;
+    meineLatitude = position.coord.latitude;
+    
+    var optionen = {
+    zoom: 13,
+    center: new google.maps.LatLng(meineLatitude, meineLongitude),
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+    
+    karte = new google.maps.Map($(´#karte`)[0],optionrn)
+    }
+    })
 
     </main>
 
