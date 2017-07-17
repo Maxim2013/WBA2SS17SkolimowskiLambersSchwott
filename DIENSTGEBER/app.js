@@ -427,7 +427,7 @@ app.delete('/res/users/:id', function (req, res) {
             if (_user === null || _user == undefined) {
                 res.status(404).send("RESOURCE NOT FOUND");
             } else {
-                //Löschen des gefundenen Users
+                //L öschen des gefundenen Users
                 db.lrem(USERLIST, 0, JSON.stringify(_user), function (err, reply) {
                     if (reply === 1) {
                         res.status(200).send(VALUE_OK);
