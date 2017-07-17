@@ -439,3 +439,17 @@ app.delete('/res/users/:id', function (req, res) {
         }
     });
 });
+
+//**********************************************************************
+//			GOOGLE API test
+//**********************************************************************
+
+app.get("/igdb", function (req, res) {
+  unirest.get("https://igdbcom-internet-game-database-v1.p.mashape.com/games/120")
+  .header("X-Mashape-Key", "glf02WQpgRmshvNhjD5wRBsLir9Zp1h7ezVjsnMl2hOkIETLuI")
+  .header("Accept", "application/json")
+  .end(function (result) {
+    console.log(result.status, result.headers, result.body);
+    res.send(result.body);
+  });
+});

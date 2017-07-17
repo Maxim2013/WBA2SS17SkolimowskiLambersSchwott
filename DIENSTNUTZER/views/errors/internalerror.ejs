@@ -1,0 +1,26 @@
+<!-- sviews/pages/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/head %>
+</head>
+<body class="container">
+
+    <header>
+    </header>
+    <main>
+      <div class="jumbotron">
+          <div style="width: 50%; margin: 0 auto;">
+          <h1>500 - Interner Fehler!</h1>
+          <img src="http://localhost:1338/img/error_ape.jpg" />
+          <p style="margin-top: 20px;"><% if(errorMessage == undefined) { %>Oops, da ist etwas schief gelaufen! Aber unser Techteam arbeitet bereits dran<% } else {%> <%= errorMessage %> <% }%><a href="/dashboard">Zurück zur Startseite</a></p>
+          </div>
+      </div>
+    </main>
+    <footer>
+        <% include ../partials/footer %>
+    </footer>
+    
+</body>
+</html>
