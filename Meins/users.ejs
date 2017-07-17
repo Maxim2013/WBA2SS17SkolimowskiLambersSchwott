@@ -1,0 +1,70 @@
+
+
+
+<html>
+		<head><title>MI-Verleih</title></head>
+
+
+
+		<body>
+
+        <header>
+            
+            <img src="./th-koeln-logo.png" width="129" height="90" align="left">
+            <img src="./Dienstnutzer.png" alt="eine grafik" width="400" height="150" align="central">
+            <img src="./designguide_articl_11_95_.jpg" alt="eine grafik" width="250" height="150" align="right">
+            
+       
+          
+                
+        <nav>
+          <ul>
+              
+                  
+                <a href="http://localhost:3001/equipment/kameras" title="Kameras">Kameras</a>
+        
+             
+                <a href="http://localhost:3001/equipment/beleuchtung" title="Beleuchtungen">Beleuchtung</a>
+        
+        
+                <a href="http://localhost:3001/equipment/ton" title="Tonausruestung">Ton</a>
+                  
+                  
+                <a href="http://localhost:3001/users" title="Users">Mitarbeiter</a>
+
+
+                <a href="http://localhost:8000/faye" title="Nachrichten">Nachrichten</a>
+              
+              
+          </ul>
+      </nav>
+
+    </header>
+
+
+                <h1>Administratoren</h1>
+
+                        
+                         
+                         <tbody>
+                <% for(var i = 0; i < users.length; i++)
+                {
+                %> <tr>
+                            <p> <strong>ID:</strong>            <%= users[i].id %> </p>
+                            <p> <strong>Name:</strong>          <%= users[i].Name %> </p>
+                            <p> <strong>Studiengang:</strong>   <%= users[i].Studiengang %> </p>
+                            <p> <strong>Semester:</strong>      <%= users[i].Semester %> </p>
+                            <p> <strong>Funktion:</strong>      <%= users[i].Funktion %> </p>
+
+                 
+                    </tr><%
+                    }
+                %>
+            </tbody>
+                     
+
+		</body>
+
+</html>
+
+
