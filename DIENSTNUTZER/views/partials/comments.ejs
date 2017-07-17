@@ -1,0 +1,21 @@
+<% if(commentData.length !== 0) { %>
+    <% for(var i=0; i<commentData.length; i++) { %>
+        <%
+        var t = new Date(commentData[i].timestamp);
+        
+        var _timeString = t.getDate() + '.' + t.getMonth() + '.' + t.getFullYear()+ ' - ' + t.toISOString().slice(11, 16);
+
+%>
+            <div class="panel-group">
+                <div class="panel panel-default comment-container">
+                    <div class="panel-heading">
+                        <%= commentData[i].uploaderName %> -
+                            <%= _timeString %>
+                    </div>
+                    <div class="panel-body">
+                        <%= commentData[i].text %>
+                    </div>
+                </div>
+            </div>
+            <% } %>
+                <%}%>

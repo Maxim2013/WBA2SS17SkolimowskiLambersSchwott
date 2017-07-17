@@ -1,14 +1,14 @@
 [
   {
     "id": 0,
-    "objektId": 0,
+    "videoId": 0,
     "userId":0,
-    "text":"**Positiver Kommentar zum Ausleihobjekt**"
+    "text":"Das ist ein toller Kommentar zu einem unfassbaren Video"
   },
   {
     "id": 1,
-    "objektId": 0,
+    "videoId": 0,
     "userId":0,
-    "text":"**Negativer Kommentar zum Ausleihobjekt**"
+    "text":"Wow was für ein bullshit"
   }
 ]

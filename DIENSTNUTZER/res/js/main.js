@@ -80,10 +80,10 @@ function registerUser() {
 }
 
 function loadCommentData() {
-    var _Id = $('Id').val();
+    var _videoId = $('#videoId').val();
     $.ajax({
         type: "GET"
-        , url: '/ausleihobjekte/' + _Id + '/comments'
+        , url: '/video/' + _videoId + '/comments'
         , cache: false
         , complete: function (data) {
             $('#comment-container').html(data.responseText);

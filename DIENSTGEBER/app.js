@@ -7,15 +7,15 @@ var jsonParser = bodyParser.json();
 var app = express();
 
 var USERLIST = 'USERLIST';
-var AUSLEIHOBJEKTELIST = 'AUSLEIHOBJEKTELIST';
+var OBJEKTLIST = 'OBJEKTLIST';
 
-var AUSLEIHOBJEKTELIST_INDEX = 'AUSLEIHOBJEKTLIST_INDEX';
+var OBJEKT_INDEX = 'OBJEKT_INDEX';
 var USER_INDEX = 'USER_INDEX';
 
 var VALUE_OK = 'OK';
 
 function cleanDb() {
-    db.del([AUSLEIHOBJEKTELIST, USERLIST], function (err, reply) {
+    db.del([OBJEKTLIST, USERLIST], function (err, reply) {
         console.log("DB Clean! " + reply);
     });
 }
@@ -49,34 +49,32 @@ function errorInDatabase(res, err) {
     }
 }
 
-function isValidAusleihobjekte(ausleihobjekte) {
-    if (ausleihobjekte === undefined) {
+function isValidObjekt(objekt) {
+  /*  if (objekt === undefined) {
         return false;
     }
-        if (ausleihobjekte.id === undefined) {
+    if (objekt.title === undefined) {
         return false;
     }
-      if (ausleihobjekte.art === undefined) {
+    if (objekt.youtubeId === undefined) {
         return false;
     }
-    if (ausleihobjekte.title === undefined) {
+    if (objekt.description === undefined) {
         return false;
     }
-    if (ausleihobjekte.autor=== undefined) {
+    if (objekt.tags === undefined) {
         return false;
     }
-    if (ausleihobjekte.isbn === undefined) {
+    if (objekt.uploader === undefined) {
         return false;
-    }
-    if (ausleihobjekte.ausleihstatus === undefined) {
-        return false;
-    }
+    } */
+	
     return true;
 }
 
-function getAusleihobjeketById(ausleihobjekteList, id) {
+function getObjektById(OBJEKTLIST, id) {
     var result;
-    ausleihobjektList.forEach(function (entry) {
+    OBJEKTLIST.forEach(function (entry) {
         _json = JSON.parse(entry);
         if (parseInt(_json.id) == id) {
             result = _json;
@@ -86,13 +84,13 @@ function getAusleihobjeketById(ausleihobjekteList, id) {
 }
 
 function isValidUser(user) {
-   /* if (user === undefined) {
+  /*  if (user === undefined) {
         return false;
     }
     if (user.username === undefined) {
         return false;
     }
-    if (user.id === undefined) {
+    if (user.email === undefined) {
         return false;
     }
     if (user.password === undefined) {
@@ -152,13 +150,13 @@ app.use('/', function (req, res, next) {
 //Festlegen aller Routen
 
 //**********************************************************************
-//			Laden aller vorhandenen Ausleihobjekte
+//			Laden aller vorhandenen Objekts
 //**********************************************************************
-app.get('/res/ausleihobjekte', function (req, res) {
+app.get('/objekts/', function (req, res) {
     //Sollen die Liste eingegrenz werden?
     var _searchTerm = req.query.searchterm;
-    //Laden aller objekte
-    db.lrange(AUSLEIHOBJEKTELIST, 0, -1, function (err, reply) {
+    //Laden aller Objekts
+    db.lrange(OBJEKTLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
             if (reply === null || reply == undefined) {
                 handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Video List')
@@ -166,13 +164,13 @@ app.get('/res/ausleihobjekte', function (req, res) {
                 var _result = [];
                 reply.forEach(function (element) {
                     //Überprüfen ob das Ergebniss den Suchparametern entspricht
-                    var _ausleihobjekte = JSON.parse(element)
+                    var _objekt = JSON.parse(element)
                     if (_searchTerm == undefined) {
-                        _result.push(_video);
+                        _result.push(_objekt);
                     } else {
                         //Überprüfen ob der Suchbegriff enthalten ist:
-                        var termInTags = arrayContainsTerm(_ausleihobjekete.tags, _searchTerm);
-                        var termInDescription = stringContainsTerm(_ausleihobjekte.description, _searchTerm);
+                        var termInTags = arrayContainsTerm(_objekt.tags, _searchTerm);
+                        var termInDescription = stringContainsTerm(_objekt.description, _searchTerm);
                         if (termInDescription || termInTags) {
                             _result.push(JSON.parse(element));
                         }
@@ -187,29 +185,29 @@ app.get('/res/ausleihobjekte', function (req, res) {
 });
 
 //**********************************************************************
-//			Anlegen eines neuen Ausleihobjektes
+//			Anlegen eines neuen Objekts
 //**********************************************************************
-app.post('/res/ausleihobjekte', jsonParser, function (req, res) {
-    //Abfragen wieviele Ausleihobjekte aktuell in der Liste sind um eine ID zu generieren
-    db.get(AUSLEIHOBJEKTE_INDEX, function (err, reply) {
+app.post('/objekts', jsonParser, function (req, res) {
+    //Abfragen wieviele Viedos aktuell in der Liste sind um eine ID zu generieren
+    db.get(OBJEKT_INDEX, function (err, reply) {
         var _id = parseInt(reply);
-        //Es wird per JSON ein komplettes ausleihobjekt gesendet -> kann direkt aus dem body entnommenwerden
-        var newAusleihobjekte = req.body;
+        //Es wird per JSON ein komplettes objektobjekt gesendet -> kann direkt aus dem body entnommenwerden
+        var newVideo = req.body;
         //Überprüfen ob passende parameter gesendet wurden
-        if (!isValidVideo(newAusleihobjekte)) {
+        if (!isValidObjekt(newVideo)) {
             handleInternalError(req, res, 'INTERNAL SERVER ERROR - Error in given Videodata')
         } else {
             //Objekt vervollständigen und in die DB speichern
-            newAusleihobjekte.id = _id;
-            db.rpush(AUSLEIHOBJEKTELIST, JSON.stringify(newAusleihobjekte), function (err, reply) {
+            newVideo.id = _id;
+            db.rpush(OBJEKTLIST, JSON.stringify(newVideo), function (err, reply) {
                 if (!errorInDatabase(res, err)) {
                     if (reply !== _id) {
                         //TODO INCREMENT ID
-                        db.incr(AUSLEIHOBJEKTE_INDEX, function (err, reply) {
+                        db.incr(OBJEKT_INDEX, function (err, reply) {
                             if (!errorInDatabase(res, err)) {
-                                res.status(201).json(newAusleihobjekte);
+                                res.status(201).json(newVideo);
                             } else {
-                                handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot increment VIDEO_INDEX')
+                                handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot increment OBJEKT_INDEX')
                             }
                         });
                     }
@@ -220,48 +218,87 @@ app.post('/res/ausleihobjekte', jsonParser, function (req, res) {
 });
 
 
-//******************************************************************************
-//			Laden der Informationen der Ausleihobjekte mit der angegebenen Id
-//******************************************************************************
-app.get('/res/ausleihobjekte/:id', function (req, res) {
-    var _ausleihobjekteId = parseInt(req.params.ausleihobjekteId);
-    //Laden aller ausleihobjekte
-    db.lrange(AUSLEIHOBJEKTELIST, 0, -1, function (err, reply) {
+//**********************************************************************
+//			Laden der Informationen zum Video mit der angegebenen Videoid
+//**********************************************************************
+app.get('/objekts/:objektId', function (req, res) {
+    var _objektId = parseInt(req.params.objektId);
+    //Laden aller Objekts
+    db.lrange(OBJEKTLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
-            var _ausleihobjekte = getAusleihobjekteById(reply, _ausleihobjekteId);
-            
-            if (_ausleihobjekte === null) {
+            var _objekt = getObjektById(reply, _objektId);
+            //entfernen der Kommentardaten aus dem objekt Objekt!
+            delete _objekt.comments;
+            if (_objekt === null) {
                 res.status(404).send("RESOURCE NOT FOUND");
             } else {
-                res.status(200).json(_video);
+                res.status(200).json(_objekt);
             }
         } else {
-            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Ausleihobjekt with id ' + _ausleihobjekteId);
+            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Video with id ' + _objektId);
         }
     });
 
 });
 
 
-
 //**********************************************************************
-//			Löschen des Ausleihobjektes mit der angegebenen id
+//			Aktualisieren der änderbaren Informationen eines Objekts mit der übergebenen ID
 //**********************************************************************
-app.delete('/res/ausleihobjekte/:id', function (req, res) {
-    var _id = parseInt(req.params.id);
-    //Laden aller Ausleihobjekte
-    db.lrange(VIDEOLIST, 0, -1, function (err, reply) {
+app.patch('/objekts/:objektId', function (req, res) {
+    var _objektId = parseInt(req.params.objektId);
+    var _objektData = req.body;
+    db.lrange(OBJEKTLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
-            var _ausleihobjekte = getausleihobjekteById(reply, _videoId);
-            if (_ausleihobjekte === null || _ausleihobjekte == undefined) {
+            var _objekt = getObjektById(reply, _objektId);
+            var _objektDataToDelet = JSON.parse(JSON.stringify(_objekt));
+            if (_objekt === null) {
                 res.status(404).send("RESOURCE NOT FOUND");
             } else {
-                //Löschen 
-                db.lrem(AUSLEIHOBJEKTELIST, 0, JSON.stringify(_ausleihobjekte), function (err, reply) {
+                //Update whatever is possible
+                if (_objektData.title !== undefined && _objektData.title !== '') {
+                    _objekt.title = _objektData.title;
+                }
+                if (_objektData.description !== undefined && _objektData.description !== '') {
+                    _objekt.description = _objektData.description;
+                }
+                if (_objektData.tags !== undefined && _objektData.tags !== '') {
+                    _objekt.tags = _objektData.tags;
+                }
+                //Update Database
+                db.lrem(OBJEKTLIST, 0, JSON.stringify(_objektDataToDelet), function (err, reply) {
+                    if (reply === 1) {
+                        db.rpush(OBJEKTLIST, JSON.stringify(_objekt), function (err, reply) {
+                            res.status(200).json(_objekt)
+                        });
+                    } else {
+                        handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot update objekt with ID ' + _objektId);
+                    }
+                });
+
+            }
+        }
+    });
+});
+
+//**********************************************************************
+//			Löschen des Objekts mit der angegebenen ID
+//**********************************************************************
+app.delete('/objekts/:objektId', function (req, res) {
+    var _objektId = parseInt(req.params.objektId);
+    //Laden aller Objekts
+    db.lrange(OBJEKTLIST, 0, -1, function (err, reply) {
+        if (!errorInDatabase(res, err)) {
+            var _objekt = getObjektById(reply, _objektId);
+            if (_objekt === null || _objekt == undefined) {
+                res.status(404).send("RESOURCE NOT FOUND");
+            } else {
+                //Löschen des gefundenen Objekts
+                db.lrem(OBJEKTLIST, 0, JSON.stringify(_objekt), function (err, reply) {
                     if (reply === 1) {
                         res.status(200).send(VALUE_OK);
                     } else {
-                        handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot delete ausleihobjekte with id ' + _ausleihobjekteId);
+                        handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot delete objekt with id ' + _objektId);
                     }
                 });
             }
@@ -269,25 +306,98 @@ app.delete('/res/ausleihobjekte/:id', function (req, res) {
     });
 });
 
+//**********************************************************************
+//			Laden aller Kommentare zu einem Video mit der angegebenen ID
+//**********************************************************************
+app.get('/objekts/:objektId/comments', function (req, res) {
+    var _objektId = parseInt(req.params.objektId);
+    //Laden aller Objekts
+    db.lrange(USERLIST, 0, -1, function (usrErr, usrReply) {
+        var _userList = usrReply;
+        if (!errorInDatabase(res, usrErr)) {
+            db.lrange(OBJEKTLIST, 0, -1, function (err, reply) {
+                if (!errorInDatabase(res, err)) {
+                    var _objekt = getObjektById(reply, _objektId);
+                    if (_objekt === null && _objekt != undefined) {
+                        res.status(404).send("RESOURCE NOT FOUND");
+                    } else {
+                        //Match comments with usernames
+                        var _result = [];
+                        _objekt.comments.forEach(function (e, index) {
+                            var _element = e;
+                            var _user = getUserById(_userList, _element.userId)
+                            if (_user == undefined) {
+                                _element.uploaderName = 'UNBEKANNTER NUTZER';
+                            } else {
+                                _element.uploaderName = _user.username;
+                            }
+                            _result.push(_element);
+                        });
+                        res.status(200).json(_result);
+                    }
+                } else {
+                    handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot loading commentdata for objekt with id ' + _objektId);
+                }
+            });
+        } else {
+            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Userlist');
+        }
+    });
+
+});
+
+//**********************************************************************
+//			Hinzufügen eines Kommentars zum Video mit der angegebenen ID
+//**********************************************************************
+app.post('/objekts/:objektId/comments', jsonParser, function (req, res) {
+    var _objektId = parseInt(req.params.objektId);
+    var _commentData = req.body;
+    //Abfragen der aktuellen Videodaten
+    db.lrange(OBJEKTLIST, 0, -1, function (err, reply) {
+        if (!errorInDatabase(res, err)) {
+            var _objekt = getObjektById(reply, _objektId);
+            if (_objekt === null) {
+                res.status(404).send("RESOURCE NOT FOUND");
+            } else {
+                db.lrem(OBJEKTLIST, 0, JSON.stringify(_objekt), function (err, reply) {
+                    if (!errorInDatabase(res, err)) {
+                        _objekt.comments.push(_commentData);
+                        db.rpush(OBJEKTLIST, JSON.stringify(_objekt), function (err, reply) {
+                            if (!errorInDatabase(res, err)) {
+                                res.status(200).send(VALUE_OK);
+                            } else {
+                                handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot create updated Videodata');
+                            }
+                        });
+                    } else {
+                        handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot remove objekt with id ' + _objektId);
+                    }
+                });
+            }
+        } else {
+            handleInternalError(req, res, 'INTERNAL SERVER ERROR - Cannot load Video List');
+        }
+    });
+});
 
 
 //**********************************************************************
 //			Abfragen aller vorhandenen Tags
 //**********************************************************************
-app.get('/res/tags/', function (req, res) {
+app.get('/tags/', function (req, res) {
     //Laden aller Tags
-    db.lrange(AUSLEIHOBJEKTELIST, 0, -1, function (err, reply) {
+    db.lrange(OBJEKTLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
             if (reply === null || reply == undefined) {
                 res.status(500).send("INTERNAL SERVER ERROR - Cannot load Tag List");
             } else {
                 var _result = {};
-                //Iterriere über aller Ausleihobjekte
-                reply.forEach(function (ausleihobjekte) {
+                //Iterriere über alle Objekts
+                reply.forEach(function (objekt) {
 
-                    _ausleihobjekte = JSON.parse(ausleihobjekte);
-                    //Iterriere über alle Tags 
-                    _ausleihobjekte.tags.forEach(function (tag) {
+                    _objekt = JSON.parse(objekt);
+                    //Iterriere über alle Tags im objekt
+                    _objekt.tags.forEach(function (tag) {
                         var _tagValue = _result[tag];
                         if (_tagValue == undefined) {
                             _result[tag] = 1;
@@ -310,7 +420,7 @@ app.get('/res/tags/', function (req, res) {
 //**********************************************************************
 //			Anlegen eines neunen Users
 //**********************************************************************
-app.post('/res/users', jsonParser, function (req, res) {
+app.post('/users', jsonParser, function (req, res) {
     db.get(USER_INDEX, function (err, reply) {
         var _id = parseInt(reply);
         var newUser = req.body;
@@ -334,8 +444,8 @@ app.post('/res/users', jsonParser, function (req, res) {
 //**********************************************************************
 //			Laden aller User
 //**********************************************************************
-app.get('/res/users', function (req, res) {
-    //Laden aller User
+app.get('/users', function (req, res) {
+    //Laden aller Objekts
     db.lrange(USERLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
             if (reply === null || reply == undefined) {
@@ -354,9 +464,9 @@ app.get('/res/users', function (req, res) {
 //**********************************************************************
 //			Laden des Nutzers mit der übergebenen ID
 //**********************************************************************
-app.get('/res/users/:id', function (req, res) {
+app.get('/users/:userId', function (req, res) {
     var _userId = parseInt(req.params.userId);
-    //Laden aller Videos
+    //Laden aller Objekts
     db.lrange(USERLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
             var _user = getUserById(reply, _userId);
@@ -373,10 +483,10 @@ app.get('/res/users/:id', function (req, res) {
 //**********************************************************************
 //			Updaten der änderbaren Daten eines Nutzers
 //**********************************************************************
-app.patch('/users/:id', jsonParser, function (req, res) {
+app.patch('/users/:userId', jsonParser, function (req, res) {
     var _userId = parseInt(req.params.userId);
     var _userData = req.body;
-    //Laden aller Videos
+    //Laden aller Objekts
     db.lrange(USERLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
             var _user = getUserById(reply, _userId);
@@ -388,8 +498,8 @@ app.patch('/users/:id', jsonParser, function (req, res) {
                 if (_userData.username !== undefined && _userData.username !== '') {
                     _user.username = _userData.username;
                 }
-                if (_userData.id !== undefined && _userData.id !== '') {
-                    _user.id = _userData.id;
+                if (_userData.email !== undefined && _userData.email !== '') {
+                    _user.email = _userData.email;
                 }
                 if (_userData.password !== undefined && _userData.password !== '') {
                     _user.password = _userData.password;
@@ -418,16 +528,16 @@ app.patch('/users/:id', jsonParser, function (req, res) {
 //**********************************************************************
 //			löschen eines Benutzers
 //**********************************************************************
-app.delete('/res/users/:id', function (req, res) {
+app.delete('/users/:userId', function (req, res) {
     var _userId = parseInt(req.params.userId);
-    //Laden aller Videos
+    //Laden aller Objekts
     db.lrange(USERLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
             var _user = getUserById(reply, _userId);
             if (_user === null || _user == undefined) {
                 res.status(404).send("RESOURCE NOT FOUND");
             } else {
-                //L öschen des gefundenen Users
+                //Löschen des gefundenen Users
                 db.lrem(USERLIST, 0, JSON.stringify(_user), function (err, reply) {
                     if (reply === 1) {
                         res.status(200).send(VALUE_OK);
@@ -440,28 +550,43 @@ app.delete('/res/users/:id', function (req, res) {
     });
 });
 
-//**********************************************************************
-//			GOOGLE API test
-//**********************************************************************
 
-//app.get("/", function (req, res) {
-//  unirest.get("")
-//  .header(" "")
-//  .header("", "application/json")
-//  .end(function (result) {
-//    console.log(result.status, result.headers, result.body);
-//    res.send(result.body);
-//  });
-//});
+
+//**********************************************************************
+//			Laden aller Objekts eines Nutzers
+//**********************************************************************
+app.get('/users/:userId/objekts', function (req, res) {
+    var _userId = parseInt(req.params.userId);
+    //Laden aller Objekts
+    db.lrange(OBJEKTLIST, 0, -1, function (err, reply) {
+        if (!errorInDatabase(res, err)) {
+            var _result = [];
+            if (reply === null || reply == undefined) {
+                res.status(404).send("RESOURCE NOT FOUND");
+            } else {
+                var result = [];
+                reply.forEach(function (pElement) {
+                    var _objekt = JSON.parse(pElement);
+                    if (_objekt.uploader === _userId) {
+                        result.push(_objekt);
+                    }
+                });
+                res.status(200).json(result);
+            }
+        }
+    });
+
+});
+
 
 //**********************************************************************
 //			Helper only // Stellt einen Defaultdatensatz in der DB her
 //**********************************************************************
 app.get('/resetDb', function (req, res) {
     console.log('Setting up initial Data');
-    db.del([VIDEOLIST, USERLIST, VIDEO_INDEX, USER_INDEX], function (err, reply) {
+    db.del([OBJEKTLIST, USERLIST, OBJEKT_INDEX, USER_INDEX], function (err, reply) {
         console.log("DB Clean! " + reply);
-        var video0 = {
+        var objekt0 = {
             "id": 0
             , "title": "NodeJs Tutorial"
             , "youtubeId": "pU9Q6oiQNd0"
@@ -479,7 +604,7 @@ app.get('/resetDb', function (req, res) {
             , "uploaded": 1466602203753
             , "uploader": 0
         };
-        var video1 = {
+        var objekt1 = {
             "id": 1
             , "title": "Another NodeJs Tutorial"
             , "youtubeId": "X3C2peMLW34"
@@ -501,9 +626,9 @@ app.get('/resetDb', function (req, res) {
             , "uploaded": 1466602903753
             , "uploader": 0
         };
-        var paramsVideo = [VIDEOLIST, JSON.stringify(video0), JSON.stringify(video1)];
+        var paramsVideo = [OBJEKTLIST, JSON.stringify(objekt0), JSON.stringify(objekt1)];
         db.rpush(paramsVideo, function (err, reply) {
-            console.log("Added Videos! Reply: " + reply);
+            console.log("Added Objekts! Reply: " + reply);
         });
         var user0 = {
             "id": 0
@@ -526,8 +651,8 @@ app.get('/resetDb', function (req, res) {
             console.log("Added User! Reply: " + reply);
         });
         
-        db.set(VIDEO_INDEX, 2, function (err, reply) {
-            console.log("Set VIDEO_INDEX to 2");
+        db.set(OBJEKT_INDEX, 2, function (err, reply) {
+            console.log("Set OBJEKT_INDEX to 2");
         });
         db.set(USER_INDEX, 2, function (err, reply) {
             console.log("Set USER_INDEX to 2");

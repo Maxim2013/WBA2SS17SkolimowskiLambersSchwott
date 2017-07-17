@@ -1,20 +1,14 @@
 [
   {
-    "id":       "1",
-    "titel":    "titel1",
-    "autor":	"autor1",
-    "isbn":		"123",
+    "id": 0,
+    "name": "AsiTv"
   },
   {
-    "id":       "2",
-    "titel":	"titel2",
-    "autor":	"autor2",
-    "isbn":		"456",
+    "id": 1,
+    "name": "RTL2"
   },
   {
-    "id":       "3",
-    "titel":    "titel3",
-    "autor":    "autor3",
-    "isbn":     "789",
+    "id": 2,
+    "name": "Wahnsinn"
   }
 ]

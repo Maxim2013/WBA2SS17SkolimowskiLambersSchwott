@@ -1,19 +1,12 @@
- [
+[
   {
     "id": 0,
-    "username": "mark",
-    "password": "mark1",
+    "username": "HansWurst91",
+    "password": "password"
   },
-
   {
     "id": 1,
-    "username": "laura",
-    "password": "laura1",
-  },
-  
-  {
-    "id": 2,
-    "username": "gerald",
-    "password": "gerald1",
+    "username": "Nasenbär34",
+    "password": "brdgmbh"
   }
 ]

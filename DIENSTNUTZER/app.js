@@ -9,6 +9,10 @@ var app = express();
 
 var DIENSTGEBER_BASE_URL = "http://localhost:1337"
 
+var HTTP_SUCCESSFULL = 200;
+var HTTP_CREATED = 201;
+var HTTP_NOT_FOUND = 404;
+var HTTP_INTERNAL_ERROR = 500;
 
 //*****************HELPER FUNCTIONS**************************//
 
@@ -93,8 +97,6 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-
-/*
 //*************************************************************************************
 //          Security Middleware
 //*************************************************************************************
@@ -124,7 +126,45 @@ app.use(function (req, res, next) {
 
 // use res.render to load up an ejs view file
 
-*/
+//*************************************************************************************
+//          Unleiden der Route '/' auf /dashboard
+//*************************************************************************************
+app.get('/', function (req, res) {
+    res.redirect('/dashboard');
+});
+
+//*************************************************************************************
+//          Laden der Dashboard Seite
+//*************************************************************************************
+app.get('/dashboard', function (req, res) {
+    console.log('Showing Dashboard');
+    var _data = buildBasicDataSet(req, true);
+    //videoliste laden,
+    request.get(DIENSTGEBER_BASE_URL + '/videos/', function (error, response, body) {
+        if (!error && response.statusCode == HTTP_SUCCESSFULL) {
+            var _videoList = JSON.parse(body);
+            //videoliste sortieren
+            _videoList.sort(function (a, b) {
+                return b.uploaded - a.uploaded;
+            });
+            _data.videoList = _videoList;
+            //Laden der Tagcloud
+            request.get(DIENSTGEBER_BASE_URL + '/tags/', function (error, response, body) {
+                if (!error && response.statusCode == HTTP_SUCCESSFULL) {
+                    var _tagData = JSON.parse(body);
+                    //Work the Data
+                    _data.tagData = _tagData;
+                    res.render('pages/dashboard', _data);
+                }
+            });
+        } else {
+            handleInternalError(req, res);
+        }
+    });
+});
+
+
+
 
 //*************************************************************************************
 //          Laden der Suchseite
@@ -133,7 +173,7 @@ app.get('/search', function (req, res) {
     console.log('Showing Searchpage');
     var data = buildBasicDataSet(req, true);
     data.searchTerm = ""
-    data.ausleihbojektList = [];
+    data.videoList = [];
     res.render('pages/search', data);
 });
 
@@ -149,15 +189,15 @@ app.get('/search/:term', function (req, res) {
     if (_searchTerm != undefined) {
         _queryString = '?searchterm=' + _searchTerm;
     }
-    request.get(DIENSTGEBER_BASE_URL + '/ausleihobjekte' +
+    request.get(DIENSTGEBER_BASE_URL + '/videos' +
         _queryString
         , function (error, response, body) {
             if (!error && response.statusCode == HTTP_SUCCESSFULL) {
                 var result = [];
-                var _ausleihbojektList = JSON.parse(body);
+                var _videoList = JSON.parse(body);
                 _videoList.forEach(function (video, index) {
-                    var termInTags = arrayContainsTerm(_ausleihbojektList.tags, _searchTerm);
-                    var termInDescription = stringContainsTerm(_ausleihbojektList.description, _searchTerm);
+                    var termInTags = arrayContainsTerm(video.tags, _searchTerm);
+                    var termInDescription = stringContainsTerm(video.description, _searchTerm);
                     if (termInTags || termInDescription) {
                         result.push(video);
                     }
@@ -172,16 +212,16 @@ app.get('/search/:term', function (req, res) {
 });
 
 //*************************************************************************************
-//          Laden der Detailseite eines ausleihobjekt
+//          Laden der Detailseite eines Videos
 //*************************************************************************************
-app.get('/di/:id', function (req, res) {
-    console.log('Showing Objektpage');
+app.get('/video/:id', function (req, res) {
+    console.log('Showing Videopage');
     var _videoId = parseInt(req.params.id);
-    request.get(DIENSTGEBER_BASE_URL + '/objekt/' + _Id, function (error, response, body) {
+    request.get(DIENSTGEBER_BASE_URL + '/videos/' + _videoId, function (error, response, body) {
         if (!error && response.statusCode == HTTP_SUCCESSFULL) {
-            var _ausleihobjekt = JSON.parse(body);
+            var _video = JSON.parse(body);
             var data = buildBasicDataSet(req, true);
-            data.ausleihobjekt = _ausleihobjekt;
+            data.video = _video;
             data.currentUserId = req.session.userid;
             res.render('pages/video', data);
         } else {
@@ -192,7 +232,33 @@ app.get('/di/:id', function (req, res) {
 
 
 //*************************************************************************************
-//          Bearbeiten eines ausleihobjekt durchführen
+//          Seite zur Bearbeitung eines Videos Laden
+//*************************************************************************************
+app.get('/video/:id/edit', function (req, res) {
+    console.log('Showing Videoeditpage');
+    var _videoId = parseInt(req.params.id);
+    request.get(DIENSTGEBER_BASE_URL + '/videos/' + _videoId, function (error, response, body) {
+        if (!error && response.statusCode == HTTP_SUCCESSFULL) {
+            var _video = JSON.parse(body);
+            if (_video.uploader === req.session.userid) {
+                var data = buildBasicDataSet(req, true);
+                data.video = _video;
+                data.currentUserId = req.session.userid;
+                data.isEdit = true;
+                res.render('pages/videoNew', data);
+            } else {
+                //Wenn es nicht der Uploader des video ist ist die bearbeitung nicht verfügbar
+                res.redirect('/video/' + _videoId);
+            }
+
+        } else {
+            handleInternalError(req, res);
+        }
+    });
+});
+
+//*************************************************************************************
+//          Bearbeiten eines Videos durchführen
 //*************************************************************************************
 app.patch('/video/:id/edit', function (req, res) {
     console.log('Editing Video');
@@ -215,12 +281,12 @@ app.patch('/video/:id/edit', function (req, res) {
 });
 
 //*************************************************************************************
-//          Laden der Kommentare zu einem ausleihobjekt
+//          Laden der Kommentare zu einem Video
 //*************************************************************************************
-app.get('/ausleihobjekt/:id/comments', function (req, res) {
+app.get('/video/:id/comments', function (req, res) {
     console.log('Showing Dashboard');
-    var _Id = parseInt(req.params.id);
-    request.get(DIENSTGEBER_BASE_URL + '/videos/' + _ausleihobjektId + '/comments', function (error, response, body) {
+    var _videoId = parseInt(req.params.id);
+    request.get(DIENSTGEBER_BASE_URL + '/videos/' + _videoId + '/comments', function (error, response, body) {
         if (!error && response.statusCode == HTTP_SUCCESSFULL) {
             var _data = {};
             _data.commentData = JSON.parse(body);
@@ -233,12 +299,12 @@ app.get('/ausleihobjekt/:id/comments', function (req, res) {
 
 
 //*************************************************************************************
-//          Löschen eines ausleihobjekt
+//          Löschen eines videos
 //*************************************************************************************
-app.get('ausleihobjekt/:id/delete', function (req, res) {
-    console.log('Deleting Ausleihobjekt');
+app.get('/video/:id/delete', function (req, res) {
+    console.log('Deleting Video');
     var _videoId = parseInt(req.params.id);
-    request.delete(DIENSTGEBER_BASE_URL + '/ausleihobjekt/' + _ausleihobjektId, function (error, response, body) {
+    request.delete(DIENSTGEBER_BASE_URL + '/videos/' + _videoId, function (error, response, body) {
         if (!error && response.statusCode == HTTP_SUCCESSFULL) {
             res.redirect('/dashboard');
         } else {
@@ -248,40 +314,40 @@ app.get('ausleihobjekt/:id/delete', function (req, res) {
 });
 
 //*************************************************************************************
-//          Laden der Seite zum anlegen eines neuen OBjekts
+//          Laden der Seite zum anlegen eines neuen Videos
 //*************************************************************************************
-app.get('/new/ausleihobjekt', function (req, res) {
-    console.log('Showing New ausleihobjekt Page');
+app.get('/new/video', function (req, res) {
+    console.log('Showing New Video Page');
     var data = buildBasicDataSet(req, true);
-    data.ausleihobjekt = {};
+    data.video = {};
     data.currentUserId = req.session.userid;
     data.isEdit = false;
     res.render('pages/videoNew', data);
 })
 
 //*************************************************************************************
-//          Anlegen eines neuen ausleihobjekt
+//          Anlegen eines neuen Videos
 //*************************************************************************************
-app.post('/new/ausleihobjekt', function (req, res) {
-    console.log('Adding new ausleihobjekt');
-    var _ausleihobjekt = {};
-   ausleihobjekt.title = req.body.title;
-   
-    _ausleihobjektdescription = req.body.description;
-    _ausleihobjekt.tags = req.body.tags;
-    _ausleihobjekt.comments = [];
-    _ausleihobjekt.uploader = req.session.userid;
-    _ausleihobjekt.uploaded = Date.now();
+app.post('/new/video', function (req, res) {
+    console.log('Adding new Video');
+    var _video = {};
+    _video.title = req.body.title;
+    _video.youtubeId = req.body.youtubeId;
+    _video.description = req.body.description;
+    _video.tags = req.body.tags;
+    _video.comments = [];
+    _video.uploader = req.session.userid;
+    _video.uploaded = Date.now();
     request.post(
-        DIENSTGEBER_BASE_URL + '/ausleihobjekt', {
+        DIENSTGEBER_BASE_URL + '/videos', {
             json: _video
         , }
         , function (error, response, body) {
             if (!error && response.statusCode == HTTP_CREATED) {
                 var _videoData = body;
                 var _result = {};
-                _result.ausleihobjektAdded = true;
-                _result.redirect = '/ausleihobjekt/' + _ausleihobjektData.id;
+                _result.videoAdded = true;
+                _result.redirect = '/video/' + _videoData.id;
                 res.status(HTTP_CREATED).json(_result);
             } else {
                 handleInternalError(req, res);
@@ -296,13 +362,13 @@ app.post('/new/comment', function (req, res) {
     console.log('Adding new Comment');
     var data = buildBasicDataSet(req, true);
     var _commentData = req.body;
-    var Id = _commentData.Id;
-    delete _commentData.Id;
+    var _videoId = _commentData.videoId;
+    delete _commentData.videoId;
     //anreichern mit übrigen Daten
     _commentData.userId = req.session.userid;
     _commentData.timestamp = Date.now();
     request.post(
-        DIENSTGEBER_BASE_URL + '/ausleihobjekt/' + _Id + '/comments', {
+        DIENSTGEBER_BASE_URL + '/videos/' + _videoId + '/comments', {
             json: _commentData
         , }
         , function (error, response, body) {
