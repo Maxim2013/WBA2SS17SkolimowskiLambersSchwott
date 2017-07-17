@@ -221,7 +221,7 @@ app.post('/res/ausleihobjekte', jsonParser, function (req, res) {
 
 
 //******************************************************************************
-//			Laden der Informationen der Ausleihobjekte mit der angegebenen Isbn
+//			Laden der Informationen der Ausleihobjekte mit der angegebenen Id
 //******************************************************************************
 app.get('/res/ausleihobjekte/:id', function (req, res) {
     var _ausleihobjekteId = parseInt(req.params.ausleihobjekteId);
@@ -249,14 +249,14 @@ app.get('/res/ausleihobjekte/:id', function (req, res) {
 //**********************************************************************
 app.delete('/res/ausleihobjekte/:id', function (req, res) {
     var _id = parseInt(req.params.id);
-    //Laden aller Videos
+    //Laden aller Ausleihobjekte
     db.lrange(VIDEOLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
             var _ausleihobjekte = getausleihobjekteById(reply, _videoId);
             if (_ausleihobjekte === null || _ausleihobjekte == undefined) {
                 res.status(404).send("RESOURCE NOT FOUND");
             } else {
-                //Löschen des gefundenen Videos
+                //Löschen 
                 db.lrem(AUSLEIHOBJEKTELIST, 0, JSON.stringify(_ausleihobjekte), function (err, reply) {
                     if (reply === 1) {
                         res.status(200).send(VALUE_OK);
@@ -282,11 +282,11 @@ app.get('/res/tags/', function (req, res) {
                 res.status(500).send("INTERNAL SERVER ERROR - Cannot load Tag List");
             } else {
                 var _result = {};
-                //Iterriere über alle Videos
+                //Iterriere über aller Ausleihobjekte
                 reply.forEach(function (video) {
 
                     _ausleihobjekte = JSON.parse(ausleihobjekte);
-                    //Iterriere über alle Tags im video
+                    //Iterriere über alle Tags 
                     _ausleihobjekte.tags.forEach(function (tag) {
                         var _tagValue = _result[tag];
                         if (_tagValue == undefined) {
@@ -334,7 +334,7 @@ app.post('/users', jsonParser, function (req, res) {
 //**********************************************************************
 //			Laden aller User
 //**********************************************************************
-app.get('/users', function (req, res) {
+app.get('/res/users', function (req, res) {
     //Laden aller Videos
     db.lrange(USERLIST, 0, -1, function (err, reply) {
         if (!errorInDatabase(res, err)) {
@@ -354,7 +354,7 @@ app.get('/users', function (req, res) {
 //**********************************************************************
 //			Laden des Nutzers mit der übergebenen ID
 //**********************************************************************
-app.get('/users/:userId', function (req, res) {
+app.get('/res/users/:id', function (req, res) {
     var _userId = parseInt(req.params.userId);
     //Laden aller Videos
     db.lrange(USERLIST, 0, -1, function (err, reply) {
@@ -418,7 +418,7 @@ app.patch('/users/:id', jsonParser, function (req, res) {
 //**********************************************************************
 //			löschen eines Benutzers
 //**********************************************************************
-app.delete('/users/:id', function (req, res) {
+app.delete('/res/users/:id', function (req, res) {
     var _userId = parseInt(req.params.userId);
     //Laden aller Videos
     db.lrange(USERLIST, 0, -1, function (err, reply) {

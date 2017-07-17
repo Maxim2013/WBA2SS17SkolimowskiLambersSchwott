@@ -12,7 +12,7 @@
 	},
 
 	{
-		"id":       "2",
+        "id":       "2",
         "art": 		"buch",
 		"titel":	"titel2",
 		"autor":	"autor2",
@@ -20,7 +20,8 @@
 		"ausleihstatus": "0", 
 	},
 
-	{	"id":       "3",
+	{	
+        "id":       "3",
         "art": 		"cd",
 		"titel":	"titel3",
 		"autor":	"autor3",
@@ -29,5 +30,4 @@
 	},
 
 	]
-}
->>>>>>> 877ecc6a8fc3dccb23f7e42e7b49c482c3a8a9db
+
