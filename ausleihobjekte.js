@@ -20,9 +20,9 @@
 	},
 
 	{	"art": 		"cd",
-		"titel":	"titel1",
-		"autor":	"autor1",
-		"isbn":		"1",
+		"titel":	"titel3",
+		"autor":	"autor3",
+		"isbn":		"3",
 		"ausleihstatus": "0",
 	},
 
